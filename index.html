@@ -378,7 +378,7 @@ const SUPABASE_URL = "https://zseijpzdskmhobolcwjf.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_eJV16JcqX13FOfh0RIA-Cw__5fh7GiJ";
 const GA_MEASUREMENT_ID = "G-KW7CVG32M0";
 
-let sb = null;
+let sb = null, cloudUser = null, syncTimer = null, lastSyncAt = null;
 function cloudReady(){ return SUPABASE_URL.indexOf("https://")===0 && SUPABASE_ANON_KEY.length>30; }
 function initCloud(){
   if(!cloudReady() || !window.supabase) return;
@@ -386,6 +386,8 @@ function initCloud(){
   sb.auth.onAuthStateChange((event, session)=>{
     if(session && session.user){
       const u = session.user;
+      const isNewLogin = cloudUser !== u.id;
+      cloudUser = u.id;
       data.account = {
         method: (u.app_metadata && u.app_metadata.provider) || "email",
         email: u.email || "",
@@ -396,10 +398,47 @@ function initCloud(){
       if(!data.onboarded && obFlowSteps()[obI]==="auth"){ obI = 1; obRender(); }
       const sBack = document.getElementById("settingsBack");
       if(sBack && sBack.classList.contains("open")) renderSettings();
+      if(isNewLogin) pullCloud();
     } else if(event==="SIGNED_OUT"){
-      data.account = null; save();
+      cloudUser = null; data.account = null; save();
     }
   });
+}
+async function pullCloud(){
+  if(!sb || !cloudUser) return;
+  try{
+    const res = await sb.from("user_data").select("payload,updated_at").eq("user_id", cloudUser).maybeSingle();
+    if(res.error){ toast("Cloud sync error — working locally"); return; }
+    const row = res.data;
+    if(row && row.payload && row.payload.scholarships){
+      const remoteT = row.payload.updatedAt || "";
+      const localT = data.updatedAt || "";
+      if(remoteT > localT){
+        const keepAccount = data.account;
+        data = fix(row.payload);
+        if(keepAccount) data.account = keepAccount;
+        localStorage.setItem(LS_KEY, JSON.stringify(data));
+        applyTheme(); applyPrefs(); applySidebar(); buildNav(); showTab();
+        renderAll(); renderResume(); updatePreview();
+        lastSyncAt = new Date();
+        toast("Synced from your account");
+        return;
+      }
+    }
+    pushCloud();
+  }catch(e){ /* offline — local storage still has everything */ }
+}
+async function pushCloud(){
+  if(!sb || !cloudUser) return;
+  try{
+    const res = await sb.from("user_data").upsert({ user_id: cloudUser, payload: data, updated_at: new Date().toISOString() });
+    if(!res.error) lastSyncAt = new Date();
+  }catch(e){ /* offline — will sync on next save */ }
+}
+function scheduleSync(){
+  if(!sb || !cloudUser) return;
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(pushCloud, 1500);
 }
 function initGA(){
   if(!GA_MEASUREMENT_ID) return;
@@ -594,7 +633,11 @@ function setAlarms(b){ data.alarms=!!b; save(); toast(b?"Calendar alarms on":"Ca
 function setPName(v){ data.profile.name=v.trim(); save(); renderProfile(); }
 function setNick(v){ data.profile.nickname=v.trim(); save(); renderProfile(); }
 function setRoleType(v){ if(v) setMode(v); renderSettings(); }
-function save(){ localStorage.setItem(LS_KEY, JSON.stringify(data)); }
+function save(){
+  data.updatedAt = new Date().toISOString();
+  localStorage.setItem(LS_KEY, JSON.stringify(data));
+  scheduleSync();
+}
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 function modeTrackers(){
   if(data.mode==="hs") return ["college","scholarship"];
@@ -1619,7 +1662,12 @@ function renderSettings(){
     const acct = data.account
       ? '<div class="setrow"><div><b>Signed in as</b><div class="sub">'+esc(data.account.name||"")+(data.account.name?" · ":"")+esc(data.account.email||"")+' (via '+esc(data.account.method)+')</div></div></div>'
       : '<div class="setrow"><div><b>Not signed in</b><div class="sub">Accounts are stored on this device in this preview</div></div></div>';
-    h = '<h3>Account</h3>'+acct+
+    const syncRow = '<div class="setrow"><div><b>Cloud sync</b><div class="sub">'+
+      (cloudUser
+        ? 'On — your data syncs to your account'+(lastSyncAt?' · last synced '+lastSyncAt.toLocaleTimeString():'')
+        : (cloudReady() ? 'Off — sign in to sync your data across devices' : 'Unavailable in local preview'))+
+      '</div></div></div>';
+    h = '<h3>Account</h3>'+acct+syncRow+
       '<div class="setrow"><div><b>Log out</b><div class="sub">Returns to the welcome screen — your data stays on this device</div></div><button class="btn" onclick="obLogout()">Log out</button></div>'+
       '<div class="setrow"><div><b>Delete account</b><div class="sub">Permanently erases all Waypoint data on this device</div></div><button class="btn danger" onclick="deleteAllData()">Delete account</button></div>'+
       '<div class="setrow"><b>Device ID</b><code style="font-size:12px;background:var(--card2);border:1px solid var(--line);border-radius:6px;padding:4px 8px">'+esc(data.deviceId)+'</code></div>'+
