@@ -1,0 +1,2022 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Waypoint — Scholarship, Internship & College App Tracker</title>
+<style>
+  :root{
+    --bg:#f3f5fa; --card:#ffffff; --card2:#f8fafd; --field:#ffffff; --ink:#16203a; --muted:#5e6a87;
+    --brand:#1e3a8a; --brand-soft:#e7edfa; --brand-hover:#16306e; --brand-text:#ffffff; --line:#e2e7f1;
+    --green:#16a34a; --green-soft:#e8f7ee; --red:#dc2626; --red-soft:#fdecec;
+    --amber:#d97706; --amber-soft:#fef3e2; --blue:#2563eb; --blue-soft:#e8f0fe;
+    --purple:#7c3aed; --purple-soft:#f1eafe; --teal:#0e7490; --teal-soft:#e0f4f8;
+    --gray-soft:#eaedf4;
+    --radius:12px; --shadow:0 1px 3px rgba(20,30,60,.08),0 4px 14px rgba(20,30,60,.05);
+  }
+  body.dark{
+    --bg:#0b1020; --card:#141b30; --card2:#1a2340; --field:#0f1730; --ink:#e8ecf7; --muted:#96a1bd;
+    --brand:#8fa6ff; --brand-soft:#1f2a52; --brand-hover:#a7b8ff; --brand-text:#0b1020; --line:#27325a;
+    --green:#36c97e; --green-soft:#123322; --red:#f87171; --red-soft:#3a181c;
+    --amber:#fbbf24; --amber-soft:#33270e; --blue:#60a5fa; --blue-soft:#142544;
+    --purple:#a78bfa; --purple-soft:#271d44; --teal:#38bdf8; --teal-soft:#0e2a3c;
+    --gray-soft:#222c4a;
+    --shadow:0 1px 3px rgba(0,0,0,.45),0 4px 16px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.45;transition:background .2s,color .2s}
+  button{font-family:inherit;cursor:pointer}
+  input,select,textarea{font-family:inherit;font-size:14px;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--brand);outline-offset:0;border-color:transparent}
+  a{color:var(--brand)}
+
+  header{background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:50}
+  .hwrap{padding:9px 16px;display:flex;align-items:center;gap:14px}
+  .logo{font-weight:800;font-size:18px;letter-spacing:-.3px;display:flex;align-items:center;gap:8px;white-space:nowrap}
+  .logo span{background:var(--brand);color:var(--brand-text);border-radius:8px;width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;font-size:16px}
+  .modeswitch{display:flex;background:var(--gray-soft);border-radius:9px;padding:3px;gap:2px}
+  .modeswitch button{border:none;background:none;padding:5px 13px;border-radius:7px;font-weight:700;font-size:12.5px;color:var(--muted);white-space:nowrap}
+  .modeswitch button.active{background:var(--card);color:var(--brand);box-shadow:0 1px 3px rgba(20,30,60,.12)}
+  .hacts{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+  .btn{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:8px 14px;font-size:13.5px;font-weight:600;color:var(--ink)}
+  .btn:hover{border-color:var(--muted);background:var(--card2)}
+  .btn.primary{background:var(--brand);border-color:var(--brand);color:var(--brand-text)}
+  .btn.primary:hover{background:var(--brand-hover)}
+  .btn.danger{color:var(--red)}
+  .btn.sm{padding:5px 10px;font-size:12.5px}
+  #sidebar{position:fixed;top:57px;left:0;bottom:0;width:230px;background:var(--card);border-right:1px solid var(--line);padding:16px 12px 12px;z-index:60;transition:transform .2s;display:flex;flex-direction:column}
+  .snav{flex:1;overflow-y:auto}
+  .sfoot{border-top:1px solid var(--line);padding-top:8px;margin-top:8px}
+  .avatar{display:inline-flex;width:24px;height:24px;border-radius:50%;background:var(--brand);color:var(--brand-text);align-items:center;justify-content:center;font-size:12px;font-weight:800;margin-right:8px;flex-shrink:0}
+  .pbtn{display:flex;align-items:center;color:var(--ink)}
+  .settings-modal{max-width:880px;padding:0;display:flex;overflow:hidden;min-height:500px}
+  .setnav{width:200px;flex-shrink:0;background:var(--card2);border-right:1px solid var(--line);padding:14px 8px}
+  .setbody{flex:1;padding:22px 26px;overflow-y:auto;max-height:82vh}
+  .setrow{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid var(--line)}
+  .setrow:last-child{border-bottom:none}
+  .setbody details{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:8px}
+  .setbody summary{font-weight:700;cursor:pointer;font-size:14px}
+  .setbody details p{margin-top:8px;font-size:13.5px;color:var(--muted)}
+  @media(max-width:700px){
+    .settings-modal{flex-direction:column;min-height:0}
+    .setnav{width:100%;display:flex;overflow-x:auto;border-right:none;border-bottom:1px solid var(--line)}
+    .setnav .sbtn{white-space:nowrap;width:auto}
+  }
+  body.sbhidden #sidebar{transform:translateX(-105%)}
+  .slabel{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin:16px 10px 6px}
+  .sbtn{display:block;width:100%;text-align:left;background:none;border:none;padding:9px 12px;border-radius:8px;font-size:14px;font-weight:600;color:var(--muted);cursor:pointer}
+  .sbtn:hover{background:var(--card2);color:var(--brand)}
+  .sbtn.active{background:var(--brand-soft);color:var(--brand)}
+  #scrim{display:none;position:fixed;inset:0;background:rgba(10,15,30,.4);z-index:55}
+
+  main{max-width:1200px;margin:0 16px 0 250px;padding:24px 8px 80px;transition:margin .2s}
+  body.sbhidden main{margin:0 auto;padding:24px 20px 80px}
+  @media(max-width:820px){
+    main{margin:0 auto !important;padding:24px 14px 80px}
+    body:not(.sbhidden) #scrim{display:block}
+    #sidebar{box-shadow:0 0 40px rgba(0,0,0,.3)}
+  }
+  .view{display:none}.view.active{display:block}
+  h2{font-size:20px;font-weight:700;margin-bottom:14px;letter-spacing:-.2px}
+  h3{font-size:15px;font-weight:700;margin-bottom:10px}
+  h4.subhead{font-size:12.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:14px 0 8px}
+  .sub{color:var(--muted);font-size:13.5px}
+
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:22px}
+  .card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 18px}
+  .card .big{font-size:24px;font-weight:800;letter-spacing:-.5px;margin-top:2px}
+  .card .lbl{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .grid2{display:grid;grid-template-columns:1.15fr .85fr;gap:18px}
+  @media(max-width:860px){.grid2{grid-template-columns:1fr}}
+  .panel{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 20px;margin-bottom:18px}
+
+  .badge{display:inline-block;padding:3px 9px;border-radius:99px;font-size:11.5px;font-weight:700;white-space:nowrap}
+  .deadline-chip{font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px;white-space:nowrap}
+  .dl-past{background:var(--gray-soft);color:var(--muted)}
+  .dl-urgent{background:var(--red-soft);color:var(--red)}
+  .dl-soon{background:var(--amber-soft);color:var(--amber)}
+  .dl-ok{background:var(--green-soft);color:var(--green)}
+  .dl-notopen{background:var(--blue-soft);color:var(--blue)}
+
+  .toolbar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;align-items:center}
+  .toolbar input[type=search]{max-width:230px}
+  .toolbar .btn.active{background:var(--brand-soft);color:var(--brand);border-color:var(--brand-soft)}
+  .toolbar select{width:auto;min-width:125px}
+  table{width:100%;border-collapse:collapse;background:var(--card)}
+  th{font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);text-align:left;padding:11px 12px;border-bottom:1px solid var(--line);background:var(--card2)}
+  td{padding:11px 12px;border-bottom:1px solid var(--line);vertical-align:top;font-size:14px}
+  tr:last-child td{border-bottom:none}
+  tr.rowlink:hover td{background:var(--card2);cursor:pointer}
+  .sname{font-weight:700}
+  .sorg{font-size:12.5px;color:var(--muted)}
+  .fit{color:#eab308;font-size:13px;letter-spacing:1px;white-space:nowrap}
+  .reqicons{font-size:11.5px;color:var(--muted);white-space:nowrap}
+  td select.statussel{width:auto;font-size:12.5px;padding:4px 6px}
+  .empty{padding:46px 20px;text-align:center;color:var(--muted)}
+  .table-scroll{overflow-x:auto;border-radius:var(--radius);box-shadow:var(--shadow)}
+
+  .dlitem{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+  .dlitem:last-child{border-bottom:none}
+  .bar{height:9px;border-radius:6px;background:var(--gray-soft);overflow:hidden;margin-top:4px}
+  .bar>div{height:100%;border-radius:6px}
+  .statrow{margin-bottom:11px}
+  .statrow .lblrow{display:flex;justify-content:space-between;font-size:13px}
+
+  .modal-back{position:fixed;inset:0;background:rgba(15,20,40,.45);display:none;z-index:100;overflow-y:auto;padding:30px 14px}
+  .modal-back.open{display:block}
+  .modal{background:var(--card);border-radius:14px;max-width:700px;margin:0 auto;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+  .modal h2{margin-bottom:16px}
+  .frow{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+  .frow.single{grid-template-columns:1fr}
+  .frow label,.flabel{display:block;font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:4px}
+  .checks{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-bottom:12px;padding:4px 0}
+  .checks label{display:flex;gap:6px;align-items:center;font-size:13.5px;font-weight:600;color:var(--ink);margin:0}
+  .checks input{width:auto}
+  .macts{display:flex;justify-content:space-between;gap:10px;margin-top:18px}
+  .macts .right{display:flex;gap:8px}
+
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1e2a4a;color:#fff;padding:10px 18px;border-radius:10px;font-size:14px;font-weight:600;opacity:0;transition:opacity .25s;z-index:200;pointer-events:none}
+  .toast.show{opacity:1}
+
+  .resume-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:860px){.resume-grid{grid-template-columns:1fr}}
+  .resume-grid textarea{min-height:340px;font-size:13.5px;line-height:1.5}
+  .score{font-size:40px;font-weight:800;letter-spacing:-1px}
+  .finding{display:flex;gap:9px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px;align-items:flex-start}
+  .finding:last-child{border-bottom:none}
+  .ficon{flex-shrink:0}
+  .banner{background:var(--blue-soft);color:var(--blue);border-radius:10px;padding:10px 14px;font-size:13.5px;font-weight:600;margin-bottom:16px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+  .banner button{background:none;border:none;color:var(--blue);font-weight:800;font-size:15px}
+  .hint{font-size:12.5px;color:var(--muted);margin-top:6px}
+  #onboard{position:fixed;inset:0;background:var(--bg);z-index:300;display:none;overflow-y:auto;padding:30px 16px}
+  #onboard.open{display:flex}
+  .obcard{max-width:560px;width:100%;background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:30px;margin:auto}
+  .obdots{display:flex;gap:6px;justify-content:center;margin-bottom:20px}
+  .obdots span{width:7px;height:7px;border-radius:50%;background:var(--line)}
+  .obdots span.on{background:var(--brand)}
+  .obchoice{display:block;width:100%;text-align:left;border:1.5px solid var(--line);background:var(--card);border-radius:12px;padding:14px 16px;margin-bottom:10px;font-size:15px;font-weight:700;color:var(--ink);cursor:pointer}
+  .obchoice:hover{border-color:var(--brand)}
+  .obchoice.sel{border-color:var(--brand);background:var(--brand-soft);color:var(--brand)}
+  .obchoice .sub{font-weight:500}
+  .obacts{display:flex;justify-content:space-between;align-items:center;margin-top:22px}
+  .rsvwrap{display:flex;justify-content:center;padding:8px 0 4px}
+  .rsv{width:230px;background:#fff;border-radius:10px;box-shadow:0 8px 28px rgba(10,20,50,.22);padding:18px 20px}
+  .rsv .l{height:7px;border-radius:4px;background:#d9dee9;margin-bottom:9px}
+  .rsv .name{height:12px;width:55%;background:#16203a;margin-bottom:13px}
+  .rsv .sec{height:8px;width:34%;background:#94a3c4;margin:12px 0 9px}
+  .rsv .b{animation:polish 3.4s ease-in-out infinite}
+  .rsv .d1{animation-delay:.35s}.rsv .d2{animation-delay:.7s}
+  @keyframes polish{
+    0%{width:48%;background:#d9dee9}
+    38%{width:96%;background:#3552a8}
+    72%{width:96%;background:#3552a8}
+    100%{width:48%;background:#d9dee9}
+  }
+  body.font-serif{font-family:Georgia,"Times New Roman",serif}
+  body.font-mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+  body.reduced *{transition:none !important;animation:none !important}
+  .pgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+  @media(max-width:700px){.pgrid{grid-template-columns:1fr}}
+  .brief-box{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:12px;font-size:12.5px;white-space:pre-wrap;max-height:260px;overflow-y:auto;font-family:ui-monospace,Menlo,Consolas,monospace;margin-top:10px}
+  .steps{font-size:13.5px;color:var(--ink);margin:10px 0 0 0;padding-left:18px}
+  .steps li{margin-bottom:6px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hwrap">
+    <button class="btn" onclick="toggleSidebar()" title="Show/hide menu" style="padding:8px 12px">☰</button>
+    <div class="logo"><span>🧭</span> Waypoint</div>
+    <div class="hacts">
+      <button class="btn primary" onclick="addDefault()">+ Add</button>
+      <input type="file" id="csvfile" accept=".csv" style="display:none" onchange="importCSV(event)">
+    </div>
+  </div>
+</header>
+
+<div id="sidebar">
+  <div class="snav">
+    <div class="slabel" style="margin-top:0">Navigate</div>
+    <div id="mainNav"></div>
+    <div class="slabel">Tools</div>
+    <button class="sbtn" onclick="exportICS()">Export calendar</button>
+    <button class="sbtn" onclick="exportCSV()">Export CSV</button>
+    <button class="sbtn" onclick="document.getElementById('csvfile').click()">Import CSV</button>
+  </div>
+  <div class="sfoot">
+    <button class="sbtn" onclick="openSettings('help')">Help</button>
+    <button class="sbtn" onclick="openSettings('general')">Settings</button>
+    <button class="sbtn pbtn" onclick="openSettings('general')"><span class="avatar" id="avatarDot">🙂</span><span id="profileName">Set up your profile</span></button>
+  </div>
+</div>
+<div id="scrim" onclick="toggleSidebar()"></div>
+
+<div id="onboard"><div class="obcard" id="obCard"></div></div>
+
+<div class="modal-back" id="settingsBack" onclick="if(event.target===this)closeSettings()">
+  <div class="modal settings-modal">
+    <div class="setnav" id="setNav"></div>
+    <div class="setbody" id="setBody"></div>
+  </div>
+</div>
+<input type="file" id="backupfile" accept=".json" style="display:none" onchange="importBackup(event)">
+
+<main>
+  <div id="sampleBanner" class="banner" style="display:none">
+    <span>You're viewing sample data so you can explore. Add your own items, or clear the samples.</span>
+    <span style="display:flex;gap:14px;align-items:center">
+      <button onclick="clearSamples()" style="font-size:13px;text-decoration:underline">Clear samples</button>
+      <button onclick="dismissBanner()">✕</button>
+    </span>
+  </div>
+
+  <section id="view-dashboard" class="view active">
+    <h2 id="dashTitle">Dashboard</h2>
+    <div class="cards" id="statCards"></div>
+    <div class="grid2">
+      <div class="panel">
+        <h3>Deadlines — next 30 days</h3>
+        <div id="upcomingList"></div>
+      </div>
+      <div>
+        <div class="panel">
+          <h3>Status breakdown</h3>
+          <div id="statusBars"></div>
+        </div>
+        <div class="panel">
+          <h3>Opening soon</h3>
+          <div id="openingList"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="listsContainer"></div>
+
+  <section id="view-insights" class="view">
+    <h2>Insights</h2>
+    <div class="grid2" id="insightsWrap"></div>
+  </section>
+
+  <section id="view-profile" class="view">
+    <h2>My Profile & Discovery</h2>
+    <div class="grid2">
+      <div class="panel">
+        <h3>Your discovery profile</h3>
+        <p class="sub" style="margin-bottom:12px">Powers eligibility matching and discovery briefs. Stored only on this device. The more you fill in, the more targeted your results get.</p>
+        <div class="pgrid">
+          <div><span class="flabel">Name</span><input id="p_name"></div>
+          <div><span class="flabel">Major(s) / Intended major</span><input id="p_majors" placeholder="e.g., Biomedical Engineering"></div>
+          <div><span class="flabel">GPA</span><input id="p_gpa" placeholder="e.g., 3.7"></div>
+          <div><span class="flabel">Graduation year</span><input id="p_gradYear" placeholder="e.g., 2028"></div>
+          <div><span class="flabel">Memberships / orgs</span><input id="p_memberships" placeholder="SHPE, BMES, honor societies…"></div>
+          <div><span class="flabel">Citizenship / residency</span>
+            <select id="p_citizenship">
+              <option value=""></option><option>US Citizen</option><option>Permanent Resident</option><option>DACA</option><option>International</option><option>Other</option>
+            </select>
+          </div>
+          <div><span class="flabel">Location (state / region)</span><input id="p_location" placeholder="e.g., Pennsylvania"></div>
+          <div><span class="flabel">Background (optional)</span><input id="p_demographics" placeholder="e.g., Hispanic/Latino, first-gen"></div>
+          <div><span class="flabel">Current title / target role</span><input id="p_role" placeholder="e.g., Process Engineer"></div>
+          <div><span class="flabel">Years of experience</span><input id="p_experience" placeholder="e.g., 5"></div>
+          <div><span class="flabel">Skills</span><input id="p_skills" placeholder="e.g., SQL, Six Sigma, CAD…"></div>
+          <div><span class="flabel">Certifications</span><input id="p_certs" placeholder="e.g., PMP, PE license, AWS…"></div>
+        </div>
+        <div style="margin-bottom:12px"><span class="flabel">Interests / keywords</span><textarea id="p_interests" rows="2" placeholder="research, medical devices, robotics, community service…"></textarea></div>
+        <button class="btn primary" onclick="saveProfile();renderProfile();">Save Profile</button>
+      </div>
+      <div class="panel">
+        <h3>Discover new opportunities</h3>
+        <p class="sub">Waypoint builds a personalized search brief from your profile and your existing tracker (so you never get duplicates). Use it with any AI that can search the web — the reply imports straight back in as a CSV.</p>
+        <ol class="steps">
+          <li>Click a button below — the brief is copied to your clipboard.</li>
+          <li>Paste it into Claude (or any AI with web search) and run it.</li>
+          <li>Save the reply as a <b>.csv</b> file.</li>
+          <li>Click <b>Import CSV</b> in the sidebar — new matches appear in your tracker.</li>
+        </ol>
+        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap" id="briefButtons"></div>
+        <div class="brief-box" id="briefPreview" style="display:none"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="view-resume" class="view">
+    <h2>Resume Studio</h2>
+    <div class="toolbar">
+      <button class="btn" id="rtab_build" onclick="resumeTab('build')">Builder (LaTeX)</button>
+      <button class="btn" id="rtab_check" onclick="resumeTab('check')">Quick Check</button>
+    </div>
+    <div id="rbWrap">
+      <div class="resume-grid">
+        <div>
+          <div class="panel">
+            <h3>AI rewrite</h3>
+            <p class="sub">Paste your current resume, add any instructions ("remove my retail job", "emphasize research"), then copy the brief into any AI. Paste its reply below — your info drops into the professional template. The formatting never changes; only the info does.</p>
+            <textarea id="rb_raw" rows="6" placeholder="Paste your current resume text here…" style="margin-top:10px"></textarea>
+            <input id="rb_instr" placeholder="Optional: anything to add, remove, or emphasize…" style="margin-top:8px">
+            <div style="margin-top:10px"><button class="btn primary" onclick="copyResumeBrief()">Copy AI Rewrite Brief</button></div>
+            <textarea id="rb_json" rows="4" placeholder="Paste the AI's reply here…" style="margin-top:12px"></textarea>
+            <div style="margin-top:8px"><button class="btn" onclick="rbImport()">Import AI Reply</button></div>
+          </div>
+          <div class="panel" id="rbForms"></div>
+        </div>
+        <div class="panel">
+          <h3>Your LaTeX resume</h3>
+          <p class="sub">Professional one-page template (Jake's Resume) — ATS-friendly, identical formatting every time.</p>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+            <button class="btn primary" onclick="openOverleaf()">Open in Overleaf (PDF)</button>
+            <button class="btn" onclick="downloadTex()">Download .tex</button>
+            <button class="btn" onclick="copyTex()">Copy LaTeX</button>
+          </div>
+          <div class="brief-box" id="texPreview" style="max-height:430px;margin-top:12px">Fill in the builder below-left or import an AI reply — your LaTeX appears here.</div>
+        </div>
+      </div>
+    </div>
+    <div id="rcWrap" style="display:none">
+      <p class="sub" style="margin-bottom:14px">Paste your resume text for an instant scan — action verbs, quantified results, weak phrases, length. Runs privately in your browser.</p>
+      <div class="resume-grid">
+        <div class="panel">
+          <textarea id="resumeText" placeholder="Paste your resume text here…"></textarea>
+          <div style="margin-top:12px"><button class="btn primary" onclick="analyzeResume()">Analyze Resume</button></div>
+        </div>
+        <div class="panel" id="resumeResults"><div class="empty">Results will appear here.</div></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="modal-back" id="modalBack" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h2 id="modalTitle">Add</h2>
+    <div id="formFields"></div>
+    <div class="macts">
+      <button class="btn danger" id="m_delete" onclick="deleteCurrent()" style="display:none">Delete</button>
+      <div class="right">
+        <button class="btn" onclick="closeModal()">Cancel</button>
+        <button class="btn primary" onclick="saveItem()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* ================= config ================= */
+const STATUS_COLORS = {
+  "Not Applied":["#6b7490","#eef0f4"], "Not Started":["#6b7490","#eef0f4"],
+  "In Progress":["#d97706","#fef3e2"],
+  "Submitted":["#2563eb","#e8f0fe"], "Applied":["#2563eb","#e8f0fe"],
+  "Pending":["#7c3aed","#f1eafe"], "Online Assessment":["#7c3aed","#f1eafe"],
+  "Interviewing":["#0e7490","#e0f4f8"],
+  "Offer":["#16a34a","#e8f7ee"], "Accepted":["#16a34a","#e8f7ee"],
+  "Committed":["#4f46e5","#eef0fe"],
+  "Rejected":["#dc2626","#fdecec"],
+  "Waitlisted":["#0e7490","#e0f4f8"], "Deferred":["#d97706","#fef3e2"],
+  "Screening":["#7c3aed","#f1eafe"], "Negotiating":["#0e7490","#e0f4f8"],
+  "Ghosted":["#6b7490","#eef0f4"]
+};
+const CTYPE_COLORS = { "Reach":["#dc2626","#fdecec"], "Target":["#d97706","#fef3e2"], "Safety":["#16a34a","#e8f7ee"] };
+
+const TR = {
+  scholarship: {
+    label:"Scholarship", plural:"Scholarships", icon:"🎓", arr:"scholarships",
+    statuses:["Not Applied","In Progress","Submitted","Pending","Accepted","Rejected","Waitlisted"],
+    applied:["Submitted","Pending","Accepted","Rejected","Waitlisted"],
+    cats:["Merit-Based","Identity-Based","Major/Field-Based","Affinity/Professional","Need-Based","Research","Corporate/Foundation","Regional","Easy/Rolling"],
+    fields:[
+      {k:"name",l:"Scholarship Name *",t:"text",ph:"e.g., SHPE Foundation Scholarship",full:1,req:1},
+      {k:"org",l:"Organization",t:"text"},
+      {k:"amount",l:"Award Amount ($)",t:"num"},
+      {k:"category",l:"Category",t:"cat"},
+      {k:"url",l:"Application URL",t:"text",ph:"https://…"},
+      {k:"opens",l:"Application Opens",t:"date"},
+      {k:"deadline",l:"Deadline",t:"date"},
+      {k:"status",l:"Status",t:"status"},
+      {k:"dateApplied",l:"Date Applied",t:"date"},
+      {k:"fit",l:"Fit Rating",t:"fit"},
+      {k:"essay",l:"Essay required",t:"check"},
+      {k:"lor",l:"LOR required",t:"check"},
+      {k:"elig",l:"Eligibility Requirements",t:"area",ph:"GPA, major, memberships, citizenship…"},
+      {k:"notes",l:"Notes",t:"area"}
+    ],
+    csv:[["Name","name"],["Organization","org"],["Amount","amount","num"],["Category","category"],["Eligibility","elig"],["Opens","opens","date"],["Deadline","deadline","date"],["Date Applied","dateApplied","date"],["Status","status","status"],["URL","url"],["Essay Required","essay","bool"],["LOR Required","lor","bool"],["Fit Rating","fit","fit"],["Notes","notes"]]
+  },
+  internship: {
+    label:"Internship", plural:"Internships", icon:"💼", arr:"internships",
+    statuses:["Not Applied","In Progress","Applied","Online Assessment","Interviewing","Offer","Accepted","Rejected","Ghosted"],
+    applied:["Applied","Online Assessment","Interviewing","Offer","Accepted","Rejected","Ghosted"],
+    cats:["Software","Hardware","Data/ML","Research/REU","Biomed","Finance","Consulting","Co-op","Other"],
+    fields:[
+      {k:"name",l:"Position Title *",t:"text",ph:"e.g., Software Engineering Intern",full:1,req:1},
+      {k:"org",l:"Company / Organization",t:"text"},
+      {k:"location",l:"Location",t:"text",ph:"City, ST / Remote"},
+      {k:"pay",l:"Pay",t:"text",ph:"$25/hr · $6k stipend"},
+      {k:"term",l:"Term",t:"text",ph:"Summer 2027"},
+      {k:"category",l:"Category",t:"cat"},
+      {k:"url",l:"Application URL",t:"text",ph:"https://…"},
+      {k:"opens",l:"Applications Open",t:"date"},
+      {k:"deadline",l:"Deadline",t:"date"},
+      {k:"status",l:"Status",t:"status"},
+      {k:"dateApplied",l:"Date Applied",t:"date"},
+      {k:"fit",l:"Fit Rating",t:"fit"},
+      {k:"cover",l:"Cover letter",t:"check"},
+      {k:"transcript",l:"Transcript",t:"check"},
+      {k:"referral",l:"Have referral",t:"check"},
+      {k:"elig",l:"Requirements",t:"area",ph:"Year, major, GPA, work authorization…"},
+      {k:"notes",l:"Notes",t:"area"}
+    ],
+    csv:[["Position","name"],["Company","org"],["Location","location"],["Pay","pay"],["Term","term"],["Category","category"],["Requirements","elig"],["Opens","opens","date"],["Deadline","deadline","date"],["Date Applied","dateApplied","date"],["Status","status","status"],["URL","url"],["Cover Letter","cover","bool"],["Transcript","transcript","bool"],["Referral","referral","bool"],["Fit Rating","fit","fit"],["Notes","notes"]]
+  },
+  college: {
+    label:"College Application", plural:"Colleges", icon:"🏛️", arr:"colleges",
+    statuses:["Not Started","In Progress","Submitted","Deferred","Waitlisted","Accepted","Rejected","Committed"],
+    applied:["Submitted","Deferred","Waitlisted","Accepted","Rejected","Committed"],
+    cats:null,
+    fields:[
+      {k:"name",l:"College Name *",t:"text",ph:"e.g., State University",full:1,req:1},
+      {k:"location",l:"Location",t:"text"},
+      {k:"ctype",l:"List Position",t:"select",opts:["","Reach","Target","Safety"]},
+      {k:"platform",l:"Platform",t:"select",opts:["","Common App","Coalition","Direct/Own Portal","Other"]},
+      {k:"plan",l:"Application Plan",t:"select",opts:["","Early Decision","Early Action","Regular Decision","Rolling","Priority"]},
+      {k:"url",l:"Application URL",t:"text",ph:"https://…"},
+      {k:"opens",l:"Application Opens",t:"date"},
+      {k:"deadline",l:"Deadline",t:"date"},
+      {k:"status",l:"Status",t:"status"},
+      {k:"dateApplied",l:"Date Submitted",t:"date"},
+      {k:"appFee",l:"Application Fee ($)",t:"num"},
+      {k:"otherCosts",l:"Other Costs ($)",t:"num",ph:"score sends, CSS Profile…"},
+      {k:"feeWaiver",l:"Fee waiver",t:"check"},
+      {k:"essay",l:"Essay(s)",t:"check"},
+      {k:"lor",l:"LORs",t:"check"},
+      {k:"tests",l:"Test scores",t:"check"},
+      {k:"interview",l:"Interview",t:"check"},
+      {k:"elig",l:"Requirements / To-Do",t:"area",ph:"Supplemental essays, portfolio, FAFSA/CSS, counselor forms…"},
+      {k:"notes",l:"Notes",t:"area"}
+    ],
+    csv:[["College","name"],["Location","location"],["List","ctype"],["Platform","platform"],["Plan","plan"],["Opens","opens","date"],["Deadline","deadline","date"],["Date Submitted","dateApplied","date"],["Status","status","status"],["URL","url"],["App Fee","appFee","num"],["Other Costs","otherCosts","num"],["Fee Waiver","feeWaiver","bool"],["Essays","essay","bool"],["LORs","lor","bool"],["Test Scores","tests","bool"],["Interview","interview","bool"],["Requirements","elig"],["Notes","notes"]]
+  },
+  job: {
+    label:"Job", plural:"Jobs", icon:"🧑‍💼", arr:"jobs",
+    statuses:["Not Applied","In Progress","Applied","Screening","Interviewing","Offer","Negotiating","Accepted","Rejected","Ghosted"],
+    applied:["Applied","Screening","Interviewing","Offer","Negotiating","Accepted","Rejected","Ghosted"],
+    cats:["Engineering","Software/IT","Healthcare","Finance","Marketing","Sales","Operations","Education","Government","Trades","Other"],
+    fields:[
+      {k:"name",l:"Job Title *",t:"text",ph:"e.g., Senior Process Engineer",full:1,req:1},
+      {k:"org",l:"Company",t:"text"},
+      {k:"location",l:"Location",t:"text",ph:"City, ST / Remote / Hybrid"},
+      {k:"pay",l:"Salary / Rate",t:"text",ph:"$85k–$105k · $45/hr"},
+      {k:"jtype",l:"Job Type",t:"select",opts:["","Full-time","Part-time","Contract","Freelance"]},
+      {k:"category",l:"Industry / Category",t:"cat"},
+      {k:"url",l:"Job Posting URL",t:"text",ph:"https://…"},
+      {k:"opens",l:"Posted",t:"date"},
+      {k:"deadline",l:"Apply By",t:"date"},
+      {k:"status",l:"Status",t:"status"},
+      {k:"dateApplied",l:"Date Applied",t:"date"},
+      {k:"fit",l:"Fit Rating",t:"fit"},
+      {k:"cover",l:"Cover letter",t:"check"},
+      {k:"portfolio",l:"Portfolio",t:"check"},
+      {k:"references",l:"References",t:"check"},
+      {k:"elig",l:"Qualifications Required",t:"area",ph:"Years of experience, skills, certifications, education…"},
+      {k:"notes",l:"Notes",t:"area"}
+    ],
+    csv:[["Job Title","name"],["Company","org"],["Location","location"],["Salary","pay"],["Job Type","jtype"],["Category","category"],["Qualifications","elig"],["Posted","opens","date"],["Apply By","deadline","date"],["Date Applied","dateApplied","date"],["Status","status","status"],["URL","url"],["Cover Letter","cover","bool"],["Portfolio","portfolio","bool"],["References","references","bool"],["Fit Rating","fit","fit"],["Notes","notes"]]
+  }
+};
+
+const LS_KEY = "waypointData_v2";
+const OLD_KEY = "scholarTrackData_v1";
+
+/* ================= state ================= */
+let data = load();
+let currentTab = "dashboard";
+let editingId = null, editingType = null;
+
+function load(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(raw) return fix(JSON.parse(raw));
+    const old = localStorage.getItem(OLD_KEY);
+    if(old){
+      const o = JSON.parse(old);
+      return fix({ mode:"college", scholarships:o.scholarships||[], internships:[], colleges:[], profile:{}, bannerDismissed:!!o.bannerDismissed });
+    }
+  }catch(e){}
+  return fix({ mode:"college", scholarships:sampleScholarships(), internships:sampleInternships(), colleges:sampleColleges(), jobs:sampleJobs(), profile:{}, bannerDismissed:false });
+}
+function fix(d){
+  d.mode = ["hs","pro","college"].includes(d.mode) ? d.mode : "college";
+  d.theme = ["dark","system","light"].includes(d.theme) ? d.theme : "light";
+  d.lang = d.lang || "en-US";
+  d.font = ["serif","mono"].includes(d.font) ? d.font : "default";
+  d.motion = d.motion==="reduced" ? "reduced" : "system";
+  d.alarms = d.alarms!==false;
+  d.onboarded = !!d.onboarded;
+  d.account = d.account || null;
+  d.deviceId = d.deviceId || (Date.now().toString(36)+Math.random().toString(36).slice(2,10));
+  d.createdAt = d.createdAt || new Date().toISOString().slice(0,10);
+  d.lastUsed = new Date().toISOString().slice(0,10);
+  d.scholarships = d.scholarships||[]; d.internships = d.internships||[]; d.colleges = d.colleges||[]; d.jobs = d.jobs||[];
+  d.profile = d.profile||{};
+  if(!d.resume || !d.resume.header){
+    d.resume = {header:{name:"",phone:"",email:"",linkedin:"",github:""},education:[],experience:[],projects:[],skills:{languages:"",frameworks:"",tools:"",libraries:""}};
+  }
+  d.sidebar = d.sidebar==="hidden" ? "hidden" : "open";
+  return d;
+}
+function isDark(){ return document.body.classList.contains("dark"); }
+function applyTheme(){
+  const dark = data.theme==="dark" || (data.theme==="system" && window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches);
+  document.body.classList.toggle("dark", dark);
+}
+function setTheme(t){
+  data.theme = t; save(); applyTheme(); renderAll(); renderSettings();
+}
+function applyPrefs(){
+  document.body.classList.toggle("font-serif", data.font==="serif");
+  document.body.classList.toggle("font-mono", data.font==="mono");
+  document.body.classList.toggle("reduced", data.motion==="reduced");
+}
+function setFont(v){ data.font=v; save(); applyPrefs(); }
+function setMotion(v){ data.motion=v; save(); applyPrefs(); renderSettings(); }
+function setAlarms(b){ data.alarms=!!b; save(); toast(b?"Calendar alarms on":"Calendar alarms off"); }
+function setPName(v){ data.profile.name=v.trim(); save(); renderProfile(); }
+function setNick(v){ data.profile.nickname=v.trim(); save(); renderProfile(); }
+function setRoleType(v){ if(v) setMode(v); renderSettings(); }
+function save(){ localStorage.setItem(LS_KEY, JSON.stringify(data)); }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function modeTrackers(){
+  if(data.mode==="hs") return ["college","scholarship"];
+  if(data.mode==="pro") return ["job"];
+  return ["internship","scholarship"];
+}
+function items(t){ return data[TR[t].arr]; }
+
+function dOff(mOff, day){ const dt=new Date(); dt.setMonth(dt.getMonth()+mOff); dt.setDate(day); return dt.toISOString().slice(0,10); }
+function sampleScholarships(){
+  return [
+    {id:uid(),name:"SHPE Foundation Scholarship",org:"SHPE Foundation",amount:5000,category:"Affinity/Professional",elig:"SHPE member, Hispanic heritage, STEM major, 3.0+ GPA",opens:dOff(-1,1),deadline:dOff(0,28),dateApplied:"",status:"In Progress",url:"https://shpe.org/scholarships",essay:true,lor:true,notes:"Reuse personal statement. Ask Dr. Reyes for LOR early.",fit:5,sample:true},
+    {id:uid(),name:"Hispanic Scholarship Fund",org:"HSF",amount:5000,category:"Identity-Based",elig:"Hispanic heritage, 3.0+ GPA, US citizen/DACA/PR",opens:dOff(0,5),deadline:dOff(1,15),dateApplied:"",status:"Not Applied",url:"https://hsf.net",essay:true,lor:false,notes:"Opens soon — set aside a weekend.",fit:4,sample:true},
+    {id:uid(),name:"No-Essay Monthly Award",org:"Scholarship Points",amount:1000,category:"Easy/Rolling",elig:"Any enrolled student",opens:"",deadline:dOff(0,20),dateApplied:"",status:"Not Applied",url:"https://example.com",essay:false,lor:false,notes:"5-minute entry. Low odds, zero effort.",fit:3,sample:true},
+    {id:uid(),name:"Regional Engineering Award",org:"Local Engineering Society",amount:3000,category:"Regional",elig:"State resident, engineering major, 3.2+ GPA",opens:dOff(-3,1),deadline:dOff(-1,15),dateApplied:dOff(-1,10),status:"Submitted",url:"https://example.org",essay:true,lor:false,notes:"Submitted! Decision next month.",fit:4,sample:true}
+  ];
+}
+function sampleInternships(){
+  return [
+    {id:uid(),name:"Software Engineering Intern",org:"TechCorp",location:"Remote",pay:"$40/hr",term:"Summer 2027",category:"Software",elig:"CS/CE major, data structures coursework",opens:dOff(-1,1),deadline:dOff(0,25),dateApplied:"",status:"Not Applied",url:"https://example.com/careers",cover:false,transcript:false,referral:true,fit:4,notes:"Maria can refer me — message her first!",sample:true},
+    {id:uid(),name:"REU — Biomedical Research",org:"NSF REU @ State University",location:"On campus",pay:"$6,000 stipend",term:"Summer 2027",category:"Research/REU",elig:"US citizen/PR, STEM major, 3.0+ GPA",opens:dOff(0,1),deadline:dOff(1,10),dateApplied:"",status:"In Progress",url:"https://example.edu/reu",cover:true,transcript:true,referral:false,fit:5,notes:"Need faculty rec + statement of interest.",sample:true},
+    {id:uid(),name:"Hardware Intern",org:"StartupCo",location:"Philadelphia, PA",pay:"$28/hr",term:"Summer 2027",category:"Hardware",elig:"EE/CE, soldering + PCB experience",opens:dOff(-2,1),deadline:dOff(-1,20),dateApplied:dOff(-1,12),status:"Applied",url:"https://example.com",cover:true,transcript:false,referral:false,fit:3,notes:"Applied — follow up in 2 weeks.",sample:true}
+  ];
+}
+function sampleColleges(){
+  return [
+    {id:uid(),name:"State University",location:"University Park, PA",ctype:"Target",platform:"Common App",plan:"Early Action",opens:dOff(-2,1),deadline:dOff(2,1),dateApplied:"",status:"In Progress",url:"https://example.edu/apply",appFee:65,otherCosts:30,feeWaiver:false,essay:true,lor:true,tests:true,interview:false,elig:"2 supplemental essays, counselor form, SAT scores",notes:"Honors college needs separate essay.",sample:true},
+    {id:uid(),name:"Dream Tech Institute",location:"Cambridge, MA",ctype:"Reach",platform:"Direct/Own Portal",plan:"Regular Decision",opens:dOff(-1,15),deadline:dOff(3,1),dateApplied:"",status:"Not Started",url:"https://example.edu",appFee:85,otherCosts:45,feeWaiver:false,essay:true,lor:true,tests:true,interview:true,elig:"5 short essays, 2 teacher LORs, optional maker portfolio",notes:"Start essays over winter break.",sample:true},
+    {id:uid(),name:"City Community College — Honors",location:"Hometown, PA",ctype:"Safety",platform:"Direct/Own Portal",plan:"Rolling",opens:dOff(-3,1),deadline:dOff(4,15),dateApplied:"",status:"Not Started",url:"https://example.edu",appFee:0,otherCosts:0,feeWaiver:false,essay:false,lor:false,tests:false,interview:false,elig:"HS transcript only",notes:"Free to apply. Guaranteed transfer pathway.",sample:true}
+  ];
+}
+
+function sampleJobs(){
+  return [
+    {id:uid(),name:"Senior Process Engineer",org:"Global Manufacturing Co",location:"Pittsburgh, PA",pay:"$95k–$115k",jtype:"Full-time",category:"Engineering",elig:"5+ yrs process engineering, Six Sigma, BS in ChemE/ME",opens:dOff(0,1),deadline:dOff(0,22),dateApplied:"",status:"Not Applied",url:"https://example.com/jobs",cover:true,portfolio:false,references:false,fit:4,notes:"Referral possible through Luis.",sample:true},
+    {id:uid(),name:"Project Manager — Healthcare",org:"Regional Health System",location:"Hybrid",pay:"$82k",jtype:"Full-time",category:"Healthcare",elig:"PMP preferred, 3+ yrs project management",opens:dOff(-1,10),deadline:"",dateApplied:dOff(0,2),status:"Applied",url:"https://example.org/careers",cover:true,portfolio:false,references:true,fit:3,notes:"Applied via portal — follow up next week.",sample:true},
+    {id:uid(),name:"Data Analyst (Remote)",org:"FinTech Startup",location:"Remote",pay:"$70k–$85k",jtype:"Full-time",category:"Finance",elig:"SQL, Python, dashboarding; 2+ yrs",opens:dOff(-1,20),deadline:"",dateApplied:dOff(-1,25),status:"Interviewing",url:"https://example.com",cover:false,portfolio:true,references:false,fit:5,notes:"Second-round interview scheduled.",sample:true}
+  ];
+}
+
+/* ================= helpers ================= */
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function fmtMoney(n){ return (n||n===0) && n!=="" ? "$"+Number(n).toLocaleString() : "—"; }
+function parseDate(s){ if(!s) return null; const d = new Date(s+"T00:00:00"); return isNaN(d)?null:d; }
+function fmtDate(s){ const d=parseDate(s); return d ? d.toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"}) : "—"; }
+function daysUntil(s){
+  const d=parseDate(s); if(!d) return null;
+  const now=new Date(); now.setHours(0,0,0,0);
+  return Math.round((d-now)/86400000);
+}
+function deadlineChip(s){
+  const days = daysUntil(s.deadline);
+  if(days===null) return '<span class="deadline-chip dl-past">no date</span>';
+  if(days<0) return '<span class="deadline-chip dl-past">passed</span>';
+  const opens = daysUntil(s.opens);
+  if(opens!==null && opens>0) return '<span class="deadline-chip dl-notopen">opens in '+opens+'d</span>';
+  if(days===0) return '<span class="deadline-chip dl-urgent">due TODAY</span>';
+  if(days<=14) return '<span class="deadline-chip dl-urgent">'+days+'d left</span>';
+  if(days<=30) return '<span class="deadline-chip dl-soon">'+days+'d left</span>';
+  return '<span class="deadline-chip dl-ok">'+days+'d left</span>';
+}
+function pill(c, text){
+  const bg = isDark() ? c[0]+"2e" : c[1];
+  const fg = isDark() && c[0]==="#6b7490" ? "#96a1bd" : c[0];
+  return '<span class="badge" style="color:'+fg+';background:'+bg+'">'+esc(text)+'</span>';
+}
+function statusBadge(st){
+  return pill(STATUS_COLORS[st] || ["#6b7490","#eef0f4"], st);
+}
+function fitStars(n){
+  n = Number(n)||0;
+  if(!n) return '<span class="sub">—</span>';
+  return '<span class="fit">'+"★".repeat(n)+'<span style="color:var(--line)">'+"★".repeat(5-n)+'</span></span>';
+}
+function toast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.classList.add("show");
+  clearTimeout(t._tm); t._tm=setTimeout(()=>t.classList.remove("show"),2400);
+}
+function allCats(t){
+  const set = new Set(TR[t].cats||[]);
+  items(t).forEach(s=>{ if(s.category) set.add(s.category); });
+  return [...set];
+}
+function collegeCost(c){ return (c.feeWaiver?0:Number(c.appFee)||0) + (Number(c.otherCosts)||0); }
+function downloadFile(name, content, type){
+  const blob = new Blob([content],{type});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+}
+
+/* ================= nav & mode ================= */
+function navTabs(){
+  const tabs = [["dashboard","Dashboard"]];
+  modeTrackers().forEach(t=>tabs.push(["list-"+t, TR[t].plural]));
+  tabs.push(["insights","Insights"],["profile","Profile & Discovery"],["resume","Resume Check"]);
+  return tabs;
+}
+function buildNav(){
+  document.getElementById("mainNav").innerHTML = navTabs().map(([id,lbl])=>
+    '<button class="sbtn'+(currentTab===id?' active':'')+'" onclick="switchView(\''+id+'\')">'+lbl+'</button>').join("");
+}
+function applySidebar(){
+  document.body.classList.toggle("sbhidden", data.sidebar==="hidden");
+}
+function toggleSidebar(){
+  data.sidebar = data.sidebar==="hidden" ? "open" : "hidden";
+  save(); applySidebar();
+}
+function setMode(m){
+  data.mode = m; save();
+  if(!navTabs().some(([id])=>id===currentTab)) currentTab = "dashboard";
+  buildNav(); showTab(); renderAll();
+  toast(m==="hs" ? "High School mode — track college apps & scholarships" : m==="pro" ? "Professional mode — track job applications" : "College mode — track internships & scholarships");
+}
+function switchView(v){
+  currentTab = v; buildNav(); showTab(); renderAll();
+  if(window.innerWidth<=820 && data.sidebar!=="hidden"){ data.sidebar="hidden"; save(); applySidebar(); }
+}
+function showTab(){
+  document.querySelectorAll(".view").forEach(el=>el.classList.remove("active"));
+  const el = document.getElementById("view-"+currentTab);
+  if(el) el.classList.add("active");
+}
+
+/* ================= list sections ================= */
+function buildListSections(){
+  const wrap = document.getElementById("listsContainer");
+  wrap.innerHTML = ["scholarship","internship","college","job"].map(t=>{
+    const T = TR[t];
+    let extra = "";
+    if(t==="scholarship"){
+      extra = '<select id="f_'+t+'_req" onchange="renderList(\''+t+'\')"><option value="">Any requirements</option><option value="essay">Essay required</option><option value="noessay">No essay</option><option value="lor">LOR required</option><option value="nolor">No LOR</option><option value="easy">No essay + no LOR</option></select>';
+    } else if(t==="internship"){
+      extra = '<select id="f_'+t+'_req" onchange="renderList(\''+t+'\')"><option value="">Any requirements</option><option value="cover">Cover letter</option><option value="nocover">No cover letter</option><option value="referral">Have referral</option></select>';
+    } else if(t==="job"){
+      extra = '<select id="f_'+t+'_req" onchange="renderList(\''+t+'\')"><option value="">Any requirements</option><option value="cover">Cover letter</option><option value="nocover">No cover letter</option><option value="portfolio">Portfolio</option></select>';
+    } else {
+      extra = '<select id="f_'+t+'_list" onchange="renderList(\''+t+'\')"><option value="">Reach/Target/Safety</option><option>Reach</option><option>Target</option><option>Safety</option></select>'+
+              '<select id="f_'+t+'_plan" onchange="renderList(\''+t+'\')"><option value="">Any plan</option><option>Early Decision</option><option>Early Action</option><option>Regular Decision</option><option>Rolling</option><option>Priority</option></select>';
+    }
+    const cat = T.cats ? '<select id="f_'+t+'_cat" onchange="renderList(\''+t+'\')"></select>' : '';
+    let sorts = '<option value="deadline">Sort: Deadline ↑</option>';
+    if(t==="scholarship") sorts += '<option value="amount">Sort: Amount ↓</option>';
+    if(t==="college") sorts += '<option value="cost">Sort: Cost ↓</option>';
+    if(t!=="college") sorts += '<option value="fit">Sort: Fit ↓</option>';
+    sorts += '<option value="name">Sort: Name A–Z</option>';
+    const heads = {
+      scholarship:["Scholarship","Amount","Category","Deadline","Status","Fit","Reqs",""],
+      internship:["Position","Pay","Term","Category","Deadline","Status","Fit","Reqs",""],
+      college:["College","List","Plan","Deadline","Cost","Status","Reqs",""],
+      job:["Job","Salary","Type","Category","Apply By","Status","Fit","Reqs",""]
+    }[t];
+    return '<section id="view-list-'+t+'" class="view">'+
+      '<h2>'+T.plural+'</h2>'+
+      '<div class="toolbar">'+
+        '<input type="search" id="f_'+t+'_q" placeholder="Search…" oninput="renderList(\''+t+'\')">'+
+        cat +
+        '<select id="f_'+t+'_status" onchange="renderList(\''+t+'\')"><option value="">All statuses</option>'+T.statuses.map(s=>'<option>'+s+'</option>').join("")+'</select>'+
+        extra +
+        '<select id="f_'+t+'_sort" onchange="renderList(\''+t+'\')">'+sorts+'</select>'+
+        '<span class="sub" id="f_'+t+'_count"></span>'+
+        '<button class="btn primary sm" style="margin-left:auto" onclick="openModal(\''+t+'\')">+ Add '+T.label+'</button>'+
+      '</div>'+
+      '<div class="table-scroll"><table><thead><tr>'+heads.map(h=>'<th>'+h+'</th>').join("")+'</tr></thead><tbody id="f_'+t+'_body"></tbody></table></div>'+
+    '</section>';
+  }).join("");
+}
+
+function refreshCatFilter(t){
+  if(!TR[t].cats) return;
+  const sel = document.getElementById("f_"+t+"_cat");
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">All categories</option>' + allCats(t).map(c=>'<option'+(c===cur?" selected":"")+'>'+esc(c)+'</option>').join("");
+}
+
+function getFiltered(t){
+  const v = id => { const el=document.getElementById("f_"+t+"_"+id); return el?el.value:""; };
+  const q = v("q").toLowerCase().trim();
+  const st = v("status");
+  let out = items(t).filter(s=>{
+    if(q && !((s.name||"")+" "+(s.org||"")+" "+(s.location||"")+" "+(s.notes||"")+" "+(s.elig||"")).toLowerCase().includes(q)) return false;
+    if(st && s.status!==st) return false;
+    if(TR[t].cats){ const c=v("cat"); if(c && s.category!==c) return false; }
+    if(t==="scholarship"){
+      const r=v("req");
+      if(r==="essay"&&!s.essay) return false;
+      if(r==="noessay"&&s.essay) return false;
+      if(r==="lor"&&!s.lor) return false;
+      if(r==="nolor"&&s.lor) return false;
+      if(r==="easy"&&(s.essay||s.lor)) return false;
+    }
+    if(t==="internship"){
+      const r=v("req");
+      if(r==="cover"&&!s.cover) return false;
+      if(r==="nocover"&&s.cover) return false;
+      if(r==="referral"&&!s.referral) return false;
+    }
+    if(t==="job"){
+      const r=v("req");
+      if(r==="cover"&&!s.cover) return false;
+      if(r==="nocover"&&s.cover) return false;
+      if(r==="portfolio"&&!s.portfolio) return false;
+    }
+    if(t==="college"){
+      const li=v("list"); if(li && s.ctype!==li) return false;
+      const pl=v("plan"); if(pl && s.plan!==pl) return false;
+    }
+    return true;
+  });
+  const sort = v("sort");
+  out.sort((a,b)=>{
+    if(sort==="deadline"){
+      const da=daysUntil(a.deadline), db=daysUntil(b.deadline);
+      if(da===null&&db===null) return 0;
+      if(da===null) return 1; if(db===null) return -1;
+      const fa=da<0, fb=db<0;
+      if(fa!==fb) return fa?1:-1;
+      return da-db;
+    }
+    if(sort==="amount") return (Number(b.amount)||0)-(Number(a.amount)||0);
+    if(sort==="cost") return collegeCost(b)-collegeCost(a);
+    if(sort==="fit") return (Number(b.fit)||0)-(Number(a.fit)||0);
+    return (a.name||"").localeCompare(b.name||"");
+  });
+  return out;
+}
+
+function rowCommon(t,s,cells){
+  return '<tr class="rowlink" onclick="openModal(\''+t+'\',\''+s.id+'\')">'+cells+
+    '<td onclick="event.stopPropagation()"><button class="btn sm" onclick="openModal(\''+t+'\',\''+s.id+'\')">Edit</button></td></tr>';
+}
+function nameCell(t,s,sub){
+  const link = s.url ? ' <a href="'+esc(s.url)+'" target="_blank" rel="noopener" title="Open portal" onclick="event.stopPropagation()">↗</a>' : "";
+  return '<td><div class="sname">'+esc(s.name)+link+'</div><div class="sorg">'+esc(sub||"")+'</div></td>';
+}
+function statusCell(t,s){
+  return '<td onclick="event.stopPropagation()"><select class="statussel" onchange="quickStatus(\''+t+'\',\''+s.id+'\',this.value)">'+
+    TR[t].statuses.map(st=>'<option'+(st===s.status?" selected":"")+'>'+st+'</option>').join("")+'</select></td>';
+}
+function catBadge(c){ return '<td><span class="badge" style="background:var(--brand-soft);color:var(--brand)">'+esc(c||"—")+'</span></td>'; }
+function dlCell(s){ return '<td style="white-space:nowrap">'+fmtDate(s.deadline)+'<br>'+deadlineChip(s)+'</td>'; }
+
+function renderList(t){
+  refreshCatFilter(t);
+  const rows = getFiltered(t);
+  document.getElementById("f_"+t+"_count").textContent = rows.length+" of "+items(t).length;
+  const body = document.getElementById("f_"+t+"_body");
+  const colCount = {scholarship:8,internship:9,college:8,job:9}[t];
+  if(!rows.length){ body.innerHTML = '<tr><td colspan="'+colCount+'"><div class="empty">Nothing here yet. Click <b>+ Add '+TR[t].label+'</b> or import a CSV.</div></td></tr>'; return; }
+  body.innerHTML = rows.map(s=>{
+    if(t==="scholarship"){
+      const reqs = [s.essay?"Essay":"", s.lor?"LOR":""].filter(Boolean).join(" · ") || '<span style="color:#9aa3b8">none</span>';
+      return rowCommon(t,s, nameCell(t,s,s.org)+'<td style="font-weight:700;white-space:nowrap">'+fmtMoney(s.amount)+'</td>'+catBadge(s.category)+dlCell(s)+statusCell(t,s)+'<td>'+fitStars(s.fit)+'</td><td class="reqicons">'+reqs+'</td>');
+    }
+    if(t==="internship"){
+      const reqs = [s.cover?"Cover letter":"", s.transcript?"Transcript":"", s.referral?"Referral":""].filter(Boolean).join(" · ") || '<span style="color:#9aa3b8">none</span>';
+      const sub = [s.org,s.location].filter(Boolean).join(" · ");
+      return rowCommon(t,s, nameCell(t,s,sub)+'<td style="white-space:nowrap">'+esc(s.pay||"—")+'</td><td style="white-space:nowrap">'+esc(s.term||"—")+'</td>'+catBadge(s.category)+dlCell(s)+statusCell(t,s)+'<td>'+fitStars(s.fit)+'</td><td class="reqicons">'+reqs+'</td>');
+    }
+    if(t==="job"){
+      const reqs = [s.cover?"Cover letter":"", s.portfolio?"Portfolio":"", s.references?"References":""].filter(Boolean).join(" · ") || '<span style="color:#9aa3b8">none</span>';
+      const sub = [s.org,s.location].filter(Boolean).join(" · ");
+      const dl = s.deadline ? dlCell(s) : '<td><span class="sub">open until filled</span></td>';
+      return rowCommon(t,s, nameCell(t,s,sub)+'<td style="white-space:nowrap">'+esc(s.pay||"—")+'</td><td style="white-space:nowrap">'+esc(s.jtype||"—")+'</td>'+catBadge(s.category)+dl+statusCell(t,s)+'<td>'+fitStars(s.fit)+'</td><td class="reqicons">'+reqs+'</td>');
+    }
+    const cc = CTYPE_COLORS[s.ctype];
+    const ctypeB = s.ctype && cc ? pill(cc, s.ctype) : '<span class="sub">—</span>';
+    const reqs = [s.essay?"Essays":"", s.lor?"LORs":"", s.tests?"Tests":"", s.interview?"Interview":""].filter(Boolean).join(" · ") || '<span style="color:#9aa3b8">none</span>';
+    const cost = collegeCost(s);
+    const costTxt = '<span style="font-weight:700">'+fmtMoney(cost)+'</span>'+(s.feeWaiver?'<br><span class="sub">fee waived</span>':"");
+    return rowCommon(t,s, nameCell(t,s,s.location)+'<td>'+ctypeB+'</td><td style="white-space:nowrap">'+esc(s.plan||"—")+'</td>'+dlCell(s)+'<td>'+costTxt+'</td>'+statusCell(t,s)+'<td class="reqicons">'+reqs+'</td>');
+  }).join("");
+}
+
+function quickStatus(t,id,val){
+  const s = items(t).find(x=>x.id===id);
+  if(!s) return;
+  s.status = val;
+  if(TR[t].applied.includes(val) && !["Rejected","Ghosted"].includes(val) && !s.dateApplied) s.dateApplied = new Date().toISOString().slice(0,10);
+  save(); renderAll(); toast("Status → "+val);
+}
+
+/* ================= dashboard ================= */
+function card(lbl,val){ return '<div class="card"><div class="lbl">'+lbl+'</div><div class="big">'+val+'</div></div>'; }
+
+function renderDashboard(){
+  const sch = data.scholarships, intern = data.internships, col = data.colleges, jobs = data.jobs;
+  const due30 = modeTrackers().reduce((acc,t)=>{
+    return acc + items(t).filter(s=>{const d=daysUntil(s.deadline);return d!==null&&d>=0&&d<=30&&!TR[t].applied.includes(s.status);}).length;
+  },0);
+  let cards = "";
+  if(data.mode==="college"){
+    const potential = sch.filter(s=>s.status!=="Rejected").reduce((a,s)=>a+(Number(s.amount)||0),0);
+    const won = sch.filter(s=>s.status==="Accepted").reduce((a,s)=>a+(Number(s.amount)||0),0);
+    const offers = intern.filter(s=>["Offer","Accepted"].includes(s.status)).length;
+    cards = card("Scholarships",sch.length)+card("Potential value",fmtMoney(potential))+card("Won so far",fmtMoney(won))+card("Internships",intern.length)+card("Offers",offers)+card("Due in 30 days",due30);
+    document.getElementById("dashTitle").textContent = "Dashboard — College";
+  } else if(data.mode==="pro"){
+    const applied = jobs.filter(j=>TR.job.applied.includes(j.status)).length;
+    const interviewing = jobs.filter(j=>["Screening","Interviewing"].includes(j.status)).length;
+    const offers = jobs.filter(j=>["Offer","Negotiating","Accepted"].includes(j.status)).length;
+    const responded = jobs.filter(j=>["Screening","Interviewing","Offer","Negotiating","Accepted","Rejected"].includes(j.status)).length;
+    const rate = applied ? Math.round(responded/applied*100)+"%" : "—";
+    cards = card("Jobs tracked",jobs.length)+card("Applied",applied)+card("In interviews",interviewing)+card("Offers",offers)+card("Response rate",rate)+card("Closing in 30 days",due30);
+    document.getElementById("dashTitle").textContent = "Dashboard — Professional";
+  } else {
+    const submitted = col.filter(c=>TR.college.applied.includes(c.status)).length;
+    const accepted = col.filter(c=>["Accepted","Committed"].includes(c.status)).length;
+    const costs = col.reduce((a,c)=>a+collegeCost(c),0);
+    const potential = sch.filter(s=>s.status!=="Rejected").reduce((a,s)=>a+(Number(s.amount)||0),0);
+    cards = card("Colleges",col.length)+card("Submitted",submitted)+card("Acceptances",accepted)+card("Total app costs",fmtMoney(costs))+card("Scholarship value",fmtMoney(potential))+card("Due in 30 days",due30);
+    document.getElementById("dashTitle").textContent = "Dashboard — High School";
+  }
+  document.getElementById("statCards").innerHTML = cards;
+
+  let up = [];
+  modeTrackers().forEach(t=>{
+    items(t).forEach(s=>{
+      const d=daysUntil(s.deadline);
+      if(d!==null&&d>=0&&d<=30&&!TR[t].applied.includes(s.status)) up.push({t,s,d});
+    });
+  });
+  up.sort((a,b)=>a.d-b.d);
+  document.getElementById("upcomingList").innerHTML = up.length
+    ? up.map(({t,s})=>'<div class="dlitem"><div><div class="sname" style="cursor:pointer" onclick="openModal(\''+t+'\',\''+s.id+'\')">'+esc(s.name)+'</div><div class="sorg">'+TR[t].label+(s.org||s.location?" · "+esc(s.org||s.location):"")+'</div></div><div style="display:flex;gap:8px;align-items:center">'+statusBadge(s.status)+deadlineChip(s)+'</div></div>').join("")
+    : '<div class="empty">Nothing due in the next 30 days</div>';
+
+  document.getElementById("statusBars").innerHTML = modeTrackers().map(t=>{
+    const list = items(t), total = list.length;
+    if(!total) return '<h4 class="subhead">'+TR[t].plural+'</h4><div class="sub">None tracked yet</div>';
+    const counts = {};
+    list.forEach(s=>{ counts[s.status]=(counts[s.status]||0)+1; });
+    return '<h4 class="subhead">'+TR[t].plural+'</h4>'+TR[t].statuses.filter(st=>counts[st]).map(st=>{
+      const pct = Math.round(counts[st]/total*100);
+      const c = STATUS_COLORS[st]||["#6b7490","#eef0f4"];
+      return '<div class="statrow"><div class="lblrow"><span>'+esc(st)+'</span><span class="sub">'+counts[st]+'</span></div><div class="bar"><div style="width:'+pct+'%;background:'+c[0]+'"></div></div></div>';
+    }).join("");
+  }).join("");
+
+  let opening = [];
+  modeTrackers().forEach(t=>{
+    items(t).forEach(s=>{ const d=daysUntil(s.opens); if(d!==null&&d>0&&d<=60) opening.push({t,s,d}); });
+  });
+  opening.sort((a,b)=>a.d-b.d);
+  document.getElementById("openingList").innerHTML = opening.length
+    ? opening.map(({t,s})=>'<div class="dlitem"><div class="sname" style="cursor:pointer" onclick="openModal(\''+t+'\',\''+s.id+'\')">'+esc(s.name)+'</div><span class="deadline-chip dl-notopen">opens '+fmtDate(s.opens)+'</span></div>').join("")
+    : '<div class="empty">No upcoming openings tracked</div>';
+}
+
+/* ================= insights ================= */
+function renderInsights(){
+  const sch = data.scholarships;
+  let left = "", right = "";
+
+  if(data.mode==="pro"){
+    const jobs = data.jobs, total = jobs.length;
+    const counts={}; jobs.forEach(j=>counts[j.status]=(counts[j.status]||0)+1);
+    let pipe = "";
+    if(total){
+      pipe = TR.job.statuses.filter(st=>counts[st]).map(st=>{
+        const c=STATUS_COLORS[st]||["#6b7490","#eef0f4"];
+        return '<div class="statrow"><div class="lblrow"><span>'+st+'</span><span class="sub">'+counts[st]+'</span></div><div class="bar"><div style="width:'+Math.round(counts[st]/total*100)+'%;background:'+c[0]+'"></div></div></div>';
+      }).join("");
+    } else pipe = '<div class="empty">Add jobs to see your pipeline</div>';
+    left += '<div class="panel"><h3>Job pipeline</h3>'+pipe+'</div>';
+
+    const cats={}; jobs.forEach(j=>{const c=j.category||"Uncategorized"; cats[c]=(cats[c]||0)+1;});
+    const ce = Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+    const cmax = ce.length? ce[0][1]:1;
+    left += '<div class="panel"><h3>Jobs by category</h3>'+(ce.length
+      ? ce.map(([c,n])=>'<div class="statrow"><div class="lblrow"><span><b>'+esc(c)+'</b></span><span class="sub">'+n+'</span></div><div class="bar"><div style="width:'+Math.max(6,Math.round(n/cmax*100))+'%;background:var(--brand)"></div></div></div>').join("")
+      : '<div class="empty">Add jobs to see categories</div>')+'</div>';
+
+    const offers = jobs.filter(j=>["Offer","Negotiating","Accepted"].includes(j.status));
+    const rejected = jobs.filter(j=>j.status==="Rejected").length;
+    const ghosted = jobs.filter(j=>j.status==="Ghosted").length;
+    const applied = jobs.filter(j=>TR.job.applied.includes(j.status)).length;
+    const interviews = jobs.filter(j=>["Screening","Interviewing","Offer","Negotiating","Accepted"].includes(j.status)).length;
+    right += '<div class="panel"><h3>Results</h3>'+
+      '<div class="dlitem"><span>Offers</span><b style="color:var(--green)">'+offers.length+'</b></div>'+
+      '<div class="dlitem"><span>Interview rate</span><b>'+(applied?Math.round(interviews/applied*100)+"%":"—")+'</b></div>'+
+      '<div class="dlitem"><span>Rejected</span><b style="color:var(--red)">'+rejected+'</b></div>'+
+      '<div class="dlitem"><span>Ghosted</span><b style="color:var(--muted)">'+ghosted+'</b></div>'+
+      '<div class="hint">Industry average interview rate is ~10–20% of applications — volume and tailoring both matter.</div></div>';
+
+    const needCL = jobs.filter(j=>j.cover).length, needPort = jobs.filter(j=>j.portfolio).length, needRefs = jobs.filter(j=>j.references).length;
+    right += '<div class="panel"><h3>Effort overview</h3>'+
+      '<div class="dlitem"><span>Need cover letter</span><b>'+needCL+'</b></div>'+
+      '<div class="dlitem"><span>Need portfolio</span><b>'+needPort+'</b></div>'+
+      '<div class="dlitem"><span>Need references</span><b>'+needRefs+'</b></div>'+
+      '<div class="hint">Batch cover letters from one master template — swap the company paragraph, keep your qualification story.</div></div>';
+
+    document.getElementById("insightsWrap").innerHTML = '<div>'+left+'</div><div>'+right+'</div>';
+    return;
+  }
+
+  const cats = {};
+  sch.forEach(s=>{ const c=s.category||"Uncategorized"; if(!cats[c])cats[c]={n:0,sum:0}; cats[c].n++; cats[c].sum+=Number(s.amount)||0; });
+  const entries = Object.entries(cats).sort((a,b)=>b[1].sum-a[1].sum);
+  const maxSum = entries.length? (entries[0][1].sum||1):1;
+  left += '<div class="panel"><h3>Scholarship potential by category</h3>'+(entries.length
+    ? entries.map(([c,v])=>'<div class="statrow"><div class="lblrow"><span><b>'+esc(c)+'</b> <span class="sub">('+v.n+')</span></span><span style="font-weight:700">'+fmtMoney(v.sum)+'</span></div><div class="bar"><div style="width:'+Math.max(4,Math.round(v.sum/maxSum*100))+'%;background:var(--brand)"></div></div></div>').join("")
+    : '<div class="empty">Add scholarships to see insights</div>')+'</div>';
+
+  if(data.mode==="college"){
+    const list = data.internships, total=list.length;
+    const counts={}; list.forEach(s=>counts[s.status]=(counts[s.status]||0)+1);
+    let pipe = "";
+    if(total){
+      pipe = TR.internship.statuses.filter(st=>counts[st]).map(st=>{
+        const c=STATUS_COLORS[st]||["#6b7490","#eef0f4"];
+        return '<div class="statrow"><div class="lblrow"><span>'+st+'</span><span class="sub">'+counts[st]+'</span></div><div class="bar"><div style="width:'+Math.round(counts[st]/total*100)+'%;background:'+c[0]+'"></div></div></div>';
+      }).join("");
+      const applied=list.filter(s=>TR.internship.applied.includes(s.status)).length;
+      const responded=list.filter(s=>["Online Assessment","Interviewing","Offer","Accepted","Rejected"].includes(s.status)).length;
+      pipe += '<div class="hint">Response rate: '+(applied? Math.round(responded/applied*100)+"% of "+applied+" applications":"—")+'</div>';
+    } else {
+      pipe = '<div class="empty">Add internships to see your pipeline</div>';
+    }
+    left += '<div class="panel"><h3>Internship pipeline</h3>'+pipe+'</div>';
+  } else {
+    const col = data.colleges;
+    const totalCost = col.reduce((a,c)=>a+collegeCost(c),0);
+    const saved = col.reduce((a,c)=>a+(c.feeWaiver?Number(c.appFee)||0:0),0);
+    left += '<div class="panel"><h3>College application costs</h3>'+(col.length
+      ? col.slice().sort((a,b)=>collegeCost(b)-collegeCost(a)).map(c=>'<div class="dlitem"><span>'+esc(c.name)+(c.feeWaiver?' <span class="badge" style="background:var(--green-soft);color:var(--green)">waiver</span>':"")+'</span><b>'+fmtMoney(collegeCost(c))+'</b></div>').join("")+
+        '<div class="dlitem" style="border-top:2px solid var(--line)"><span><b>Total</b>'+(saved?' <span class="sub">(saved '+fmtMoney(saved)+' in waivers)</span>':"")+'</span><b style="font-size:17px">'+fmtMoney(totalCost)+'</b></div>'+
+        '<div class="hint">Includes app fees + score sends/other costs. Ask your counselor about fee waivers — NACAC, Common App, and SAT/ACT waivers can zero out most of this.</div>'
+      : '<div class="empty">Add colleges to see costs</div>')+'</div>';
+  }
+
+  const easy = sch.filter(s=>!s.essay&&!s.lor), essayOnly = sch.filter(s=>s.essay&&!s.lor), lorOnly = sch.filter(s=>!s.essay&&s.lor), heavy = sch.filter(s=>s.essay&&s.lor);
+  const row = (lbl,arr)=>{
+    const sum = arr.reduce((a,s)=>a+(Number(s.amount)||0),0);
+    return '<div class="dlitem"><span>'+lbl+' <span class="sub">('+arr.length+')</span></span><b>'+fmtMoney(sum)+'</b></div>';
+  };
+  right += '<div class="panel"><h3>Scholarship effort vs. return</h3>'+row("Low effort (no essay/LOR)",easy)+row("Essay only",essayOnly)+row("LOR only",lorOnly)+row("Essay + LOR",heavy)+'<div class="hint">Knock out the low-effort pile first, then batch essays with similar prompts.</div></div>';
+
+  const acc = sch.filter(s=>s.status==="Accepted"), rej = sch.filter(s=>s.status==="Rejected");
+  const decided = acc.length+rej.length;
+  right += '<div class="panel"><h3>Scholarship results</h3>'+
+    '<div class="dlitem"><span>Accepted</span><b style="color:var(--green)">'+acc.length+' · '+fmtMoney(acc.reduce((a,s)=>a+(Number(s.amount)||0),0))+'</b></div>'+
+    '<div class="dlitem"><span>Rejected</span><b style="color:var(--red)">'+rej.length+'</b></div>'+
+    '<div class="dlitem"><span>Acceptance rate</span><b>'+(decided?Math.round(acc.length/decided*100)+"%":"—")+'</b></div></div>';
+
+  if(data.mode==="hs"){
+    const col = data.colleges;
+    const bal = {Reach:0,Target:0,Safety:0};
+    col.forEach(c=>{ if(bal[c.ctype]!==undefined) bal[c.ctype]++; });
+    const tot = col.length||1;
+    right += '<div class="panel"><h3>List balance</h3>'+["Reach","Target","Safety"].map(k=>{
+      const c=CTYPE_COLORS[k];
+      return '<div class="statrow"><div class="lblrow"><span>'+k+'</span><span class="sub">'+bal[k]+'</span></div><div class="bar"><div style="width:'+Math.round(bal[k]/tot*100)+'%;background:'+c[0]+'"></div></div></div>';
+    }).join("")+'<div class="hint">A balanced list is roughly 2–3 reaches, 3–4 targets, 2 safeties.</div></div>';
+  }
+
+  document.getElementById("insightsWrap").innerHTML = '<div>'+left+'</div><div>'+right+'</div>';
+}
+
+/* ================= modal ================= */
+function openModal(type,id){
+  editingType = type; editingId = id||null;
+  const T = TR[type];
+  const item = id ? items(type).find(x=>x.id===id) : null;
+  document.getElementById("modalTitle").textContent = (item?"Edit ":"Add ")+T.label;
+  document.getElementById("m_delete").style.display = item?"block":"none";
+
+  const mains=[], checks=[], areas=[];
+  T.fields.forEach(f=>{ if(f.t==="check")checks.push(f); else if(f.t==="area")areas.push(f); else mains.push(f); });
+
+  let html = "", pair = [];
+  const flush = ()=>{ if(pair.length){ html += '<div class="frow'+(pair.length===1?" single":"")+'">'+pair.join("")+'</div>'; pair=[]; } };
+  mains.forEach(f=>{
+    let inp = "";
+    const fid = "fld_"+f.k;
+    if(f.t==="text") inp = '<input id="'+fid+'" placeholder="'+esc(f.ph||"")+'">';
+    else if(f.t==="num") inp = '<input id="'+fid+'" type="number" min="0" placeholder="'+esc(f.ph||"")+'">';
+    else if(f.t==="date") inp = '<input id="'+fid+'" type="date">';
+    else if(f.t==="status") inp = '<select id="'+fid+'">'+T.statuses.map(s=>'<option>'+s+'</option>').join("")+'</select>';
+    else if(f.t==="select") inp = '<select id="'+fid+'">'+f.opts.map(o=>'<option>'+o+'</option>').join("")+'</select>';
+    else if(f.t==="fit") inp = '<select id="'+fid+'"><option value="0">— Not rated —</option><option value="1">★ 1 — Weak match</option><option value="2">★★ 2</option><option value="3">★★★ 3 — Decent</option><option value="4">★★★★ 4</option><option value="5">★★★★★ 5 — Strong match</option></select>';
+    else if(f.t==="cat") inp = '<input id="'+fid+'" list="dl_'+type+'" placeholder="Pick or type your own"><datalist id="dl_'+type+'">'+allCats(type).map(c=>'<option value="'+esc(c)+'">').join("")+'</datalist>';
+    const cell = '<div><label>'+esc(f.l)+'</label>'+inp+'</div>';
+    if(f.full){ flush(); html += '<div class="frow single">'+cell+'</div>'; }
+    else { pair.push(cell); if(pair.length===2) flush(); }
+  });
+  flush();
+  if(checks.length) html += '<div class="checks">'+checks.map(f=>'<label><input type="checkbox" id="fld_'+f.k+'"> '+esc(f.l)+'</label>').join("")+'</div>';
+  areas.forEach(f=>{ html += '<div class="frow single"><div><label>'+esc(f.l)+'</label><textarea id="fld_'+f.k+'" rows="2" placeholder="'+esc(f.ph||"")+'"></textarea></div></div>'; });
+  document.getElementById("formFields").innerHTML = html;
+
+  T.fields.forEach(f=>{
+    const el = document.getElementById("fld_"+f.k);
+    if(!el) return;
+    if(f.t==="check") el.checked = item ? !!item[f.k] : false;
+    else if(f.t==="status") el.value = item ? item.status : T.statuses[0];
+    else if(f.t==="fit") el.value = item ? (item.fit||0) : 0;
+    else el.value = item ? (item[f.k]==null?"":item[f.k]) : "";
+  });
+  document.getElementById("modalBack").classList.add("open");
+  const first = document.getElementById("fld_"+T.fields[0].k);
+  if(first) first.focus();
+}
+function closeModal(){ document.getElementById("modalBack").classList.remove("open"); editingId=null; }
+
+function saveItem(){
+  const T = TR[editingType];
+  const obj = {};
+  let ok = true;
+  T.fields.forEach(f=>{
+    const el = document.getElementById("fld_"+f.k);
+    if(!el) return;
+    if(f.t==="check") obj[f.k] = el.checked;
+    else if(f.t==="num"||f.t==="fit") obj[f.k] = Number(el.value)||0;
+    else obj[f.k] = (el.value||"").trim();
+    if(f.req && !obj[f.k]) ok = false;
+  });
+  if(!ok){ toast("Name is required"); return; }
+  if(editingId){
+    const s = items(editingType).find(x=>x.id===editingId);
+    Object.assign(s,obj); delete s.sample;
+  } else {
+    obj.id = uid();
+    items(editingType).push(obj);
+  }
+  save(); closeModal(); renderAll(); toast("Saved ✓");
+}
+function deleteCurrent(){
+  if(!editingId) return;
+  if(!confirm("Delete this item?")) return;
+  data[TR[editingType].arr] = items(editingType).filter(x=>x.id!==editingId);
+  save(); closeModal(); renderAll(); toast("Deleted");
+}
+function addDefault(){
+  if(currentTab.startsWith("list-")) openModal(currentTab.slice(5));
+  else openModal(data.mode==="hs" ? "college" : data.mode==="pro" ? "job" : "scholarship");
+}
+
+/* ================= CSV ================= */
+function csvQuote(v){ return '"'+String(v==null?"":v).replace(/"/g,'""')+'"'; }
+function exportType(t){
+  const T = TR[t];
+  const rows = [T.csv.map(c=>csvQuote(c[0])).join(",")];
+  items(t).forEach(s=>{
+    rows.push(T.csv.map(c=>{
+      const v = s[c[1]];
+      if(c[2]==="bool") return csvQuote(v?"Yes":"No");
+      return csvQuote(v);
+    }).join(","));
+  });
+  downloadFile(T.plural.toLowerCase()+".csv", rows.join("\r\n"), "text/csv");
+}
+function exportCSV(){
+  if(currentTab.startsWith("list-")){ exportType(currentTab.slice(5)); toast("CSV exported"); return; }
+  modeTrackers().forEach(exportType);
+  toast("CSV files exported");
+}
+
+function parseCSV(text){
+  const rows=[]; let row=[], cell="", inQ=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];
+    if(inQ){
+      if(ch==='"'){ if(text[i+1]==='"'){cell+='"';i++;} else inQ=false; }
+      else cell+=ch;
+    }else{
+      if(ch==='"') inQ=true;
+      else if(ch===","){ row.push(cell); cell=""; }
+      else if(ch==="\n"||ch==="\r"){
+        if(ch==="\r"&&text[i+1]==="\n") i++;
+        row.push(cell); cell="";
+        if(row.length>1||row[0]!=="") rows.push(row);
+        row=[];
+      }
+      else cell+=ch;
+    }
+  }
+  if(cell!==""||row.length){ row.push(cell); if(row.length>1||row[0]!=="") rows.push(row); }
+  return rows;
+}
+
+function importCSV(ev){
+  const file = ev.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      let text = e.target.result;
+      const fence = text.match(/```(?:csv)?\s*\n([\s\S]*?)```/);
+      if(fence) text = fence[1];
+      const rows = parseCSV(text.trim());
+      if(rows.length<2){ toast("CSV appears empty"); return; }
+      const head = rows[0].map(h=>h.toLowerCase().trim());
+      const joined = head.join("|");
+      let t = "scholarship";
+      if(joined.includes("salary")||joined.includes("job title")) t = "job";
+      else if(joined.includes("company")) t = "internship";
+      else if(joined.includes("app fee")||joined.includes("college")||joined.includes("platform")) t = "college";
+      const T = TR[t];
+      const idxMap = T.csv.map(c=>{
+        const lh = c[0].toLowerCase();
+        let i = head.findIndex(h=>h===lh);
+        if(i<0) i = head.findIndex(h=>h.includes(lh));
+        return i;
+      });
+      if(idxMap[0]<0){ toast("Couldn't find a name column"); return; }
+      const get=(r,i)=> i>=0&&i<r.length ? String(r[i]).trim() : "";
+      const yes=v=>/^(yes|y|true|1)$/i.test(v);
+      const normDate=v=>{
+        if(!v) return "";
+        if(/^\d{4}-\d{2}-\d{2}$/.test(v)) return v;
+        const d=new Date(v); return isNaN(d)?"":d.toISOString().slice(0,10);
+      };
+      const existing = new Set(items(t).map(s=>(s.name||"").toLowerCase()));
+      let added=0, skipped=0;
+      rows.slice(1).forEach(r=>{
+        const obj = {id:uid()};
+        T.csv.forEach((c,ci)=>{
+          const raw = get(r,idxMap[ci]);
+          if(c[2]==="bool") obj[c[1]] = yes(raw);
+          else if(c[2]==="num") obj[c[1]] = Number(String(raw).replace(/[^0-9.]/g,""))||0;
+          else if(c[2]==="fit") obj[c[1]] = Math.min(5,Math.max(0,Number(raw)||0));
+          else if(c[2]==="date") obj[c[1]] = normDate(raw);
+          else if(c[2]==="status") obj[c[1]] = T.statuses.find(x=>x.toLowerCase()===raw.toLowerCase())||T.statuses[0];
+          else obj[c[1]] = raw;
+        });
+        if(!obj.name) return;
+        if(existing.has(obj.name.toLowerCase())){ skipped++; return; }
+        existing.add(obj.name.toLowerCase());
+        items(t).push(obj); added++;
+      });
+      save(); renderAll();
+      toast("Imported "+added+" "+T.plural.toLowerCase()+(skipped?" ("+skipped+" duplicates skipped)":""));
+    }catch(err){ toast("Import failed — check the CSV format"); }
+    ev.target.value="";
+  };
+  reader.readAsText(file);
+}
+
+/* ================= ICS ================= */
+function exportICS(){
+  const pad=n=>String(n).padStart(2,"0");
+  const icsDate=s=>s.replace(/-/g,"");
+  const nextDay=s=>{const d=parseDate(s); d.setDate(d.getDate()+1); return d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate());};
+  const now = new Date();
+  const stamp = now.getUTCFullYear()+pad(now.getUTCMonth()+1)+pad(now.getUTCDate())+"T"+pad(now.getUTCHours())+pad(now.getUTCMinutes())+"00Z";
+  const escT=v=>String(v||"").replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\n/g,"\\n");
+  let ev=0;
+  const lines=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Waypoint//EN","CALSCALE:GREGORIAN"];
+  modeTrackers().forEach(t=>{
+    const T=TR[t];
+    items(t).forEach(s=>{
+      const done = T.applied.includes(s.status);
+      if(s.deadline && parseDate(s.deadline) && !done && daysUntil(s.deadline)>=0){
+        lines.push("BEGIN:VEVENT","UID:"+s.id+"-dl@waypoint","DTSTAMP:"+stamp,
+          "DTSTART;VALUE=DATE:"+icsDate(s.deadline),"DTEND;VALUE=DATE:"+nextDay(s.deadline),
+          "SUMMARY:"+escT("DEADLINE ("+T.label+"): "+s.name),
+          "DESCRIPTION:"+escT((s.org?s.org+" · ":"")+(s.url||"")));
+        if(data.alarms){
+          lines.push("BEGIN:VALARM","TRIGGER:-P7D","ACTION:DISPLAY","DESCRIPTION:"+escT("1 week until "+s.name+" deadline"),"END:VALARM",
+            "BEGIN:VALARM","TRIGGER:-P1D","ACTION:DISPLAY","DESCRIPTION:"+escT("1 day until "+s.name+" deadline"),"END:VALARM");
+        }
+        lines.push("END:VEVENT");
+        ev++;
+      }
+      if(s.opens && parseDate(s.opens) && daysUntil(s.opens)>0){
+        lines.push("BEGIN:VEVENT","UID:"+s.id+"-op@waypoint","DTSTAMP:"+stamp,
+          "DTSTART;VALUE=DATE:"+icsDate(s.opens),"DTEND;VALUE=DATE:"+nextDay(s.opens),
+          "SUMMARY:"+escT("OPENS ("+T.label+"): "+s.name),
+          "DESCRIPTION:"+escT((s.org?s.org+" · ":"")+(s.url||"")),
+          "END:VEVENT");
+        ev++;
+      }
+    });
+  });
+  lines.push("END:VCALENDAR");
+  if(!ev){ toast("No upcoming deadlines/openings to export"); return; }
+  downloadFile("waypoint-deadlines.ics", lines.join("\r\n"), "text/calendar");
+  toast(ev+" events exported — open the file to add them to your calendar");
+}
+
+/* ================= profile & discovery ================= */
+const PROFILE_KEYS = ["name","majors","gpa","gradYear","memberships","citizenship","location","demographics","interests","role","experience","skills","certs"];
+function renderProfile(){
+  const p = data.profile;
+  PROFILE_KEYS.forEach(k=>{
+    const el = document.getElementById("p_"+k);
+    if(el && document.activeElement!==el) el.value = p[k]||"";
+  });
+  // sidebar footer
+  const dot = document.getElementById("avatarDot"), nm = document.getElementById("profileName");
+  const display = (p.nickname && p.nickname.trim()) || (p.name ? p.name.trim().split(/\s+/)[0] : "");
+  if(dot) dot.textContent = display ? display.charAt(0).toUpperCase() : "?";
+  if(nm) nm.textContent = display || "Set up your profile";
+  // summary on discovery page
+  const sum = document.getElementById("profileSummary");
+  if(sum){
+    const rows = [["Major",p.majors],["GPA",p.gpa],["Grad year",p.gradYear],["Memberships",p.memberships],["Citizenship",p.citizenship],["Location",p.location],["Background",p.demographics],["Role",p.role],["Experience",p.experience?p.experience+" yrs":""],["Skills",p.skills],["Certifications",p.certs],["Interests",p.interests]]
+      .filter(([,v])=>v);
+    sum.innerHTML = rows.length
+      ? rows.map(([l,v])=>'<div class="dlitem"><span class="sub">'+l+'</span><span style="font-weight:600;text-align:right">'+esc(v)+'</span></div>').join("")
+      : '<div class="empty">No profile yet. The more you fill in, the more targeted your discovery results get.</div>';
+  }
+  const btns = [];
+  if(data.mode==="pro"){
+    btns.push('<button class="btn primary" onclick="copyBrief(\'job\')">Copy Job Search Brief</button>');
+  } else {
+    btns.push('<button class="btn primary" onclick="copyBrief(\'scholarship\')">Copy Scholarship Brief</button>');
+    if(data.mode==="college") btns.push('<button class="btn primary" onclick="copyBrief(\'internship\')">Copy Internship Brief</button>');
+  }
+  document.getElementById("briefButtons").innerHTML = btns.join("");
+}
+function saveProfile(){
+  PROFILE_KEYS.forEach(k=>{
+    const el = document.getElementById("p_"+k);
+    if(el) data.profile[k] = el.value.trim();
+  });
+  save(); toast("Profile saved ✓");
+}
+function buildBrief(t){
+  saveProfile();
+  const p = data.profile;
+  const T = TR[t];
+  const level = data.mode==="hs" ? "high school student" : data.mode==="pro" ? "working professional" : "college student";
+  const lines = [];
+  lines.push("You are helping me find new "+T.plural.toLowerCase()+" I qualify for. Search the web for CURRENT, real opportunities with deadlines that have not passed (today is "+new Date().toISOString().slice(0,10)+").");
+  lines.push("");
+  lines.push("MY PROFILE:");
+  lines.push("- Level: "+level+(p.gradYear?", graduating "+p.gradYear:""));
+  if(p.majors) lines.push("- Major / intended major: "+p.majors);
+  if(p.gpa) lines.push("- GPA: "+p.gpa);
+  if(p.memberships) lines.push("- Memberships/orgs: "+p.memberships);
+  if(p.citizenship) lines.push("- Citizenship/residency: "+p.citizenship);
+  if(p.location) lines.push("- Location: "+p.location);
+  if(p.demographics) lines.push("- Background: "+p.demographics);
+  if(p.interests) lines.push("- Interests: "+p.interests);
+  if(p.role) lines.push("- Current/target role: "+p.role);
+  if(p.experience) lines.push("- Years of experience: "+p.experience);
+  if(p.skills) lines.push("- Skills: "+p.skills);
+  if(p.certs) lines.push("- Certifications: "+p.certs);
+  if(p.age) lines.push("- Age: "+p.age);
+  if(p.school) lines.push("- School: "+p.school+(p.year?" ("+p.year+")":""));
+  if(p.goals) lines.push("- Goals: "+p.goals);
+  if(p.employed) lines.push("- Employment status: "+p.employed);
+  lines.push("");
+  lines.push("Prioritize NICHE opportunities that match my specific profile (memberships, background, location, major) over famous national ones — those are where my odds are best.");
+  const names = items(t).map(s=>s.name).filter(Boolean);
+  if(names.length){
+    lines.push("");
+    lines.push("ALREADY IN MY TRACKER — EXCLUDE ALL OF THESE:");
+    lines.push(names.join("; "));
+  }
+  lines.push("");
+  lines.push("Find 10-15 new matches. Verify each has a real, working application page. Respond with ONLY a CSV code block (no other text) using EXACTLY these headers:");
+  lines.push(T.csv.map(c=>c[0]).join(","));
+  lines.push("");
+  lines.push('For Status use "'+T.statuses[0]+'". For yes/no columns use Yes or No. Dates as YYYY-MM-DD. Leave unknown fields empty. For Fit Rating, rate 1-5 how well each matches my profile.');
+  return lines.join("\n");
+}
+function copyBrief(t){
+  const brief = buildBrief(t);
+  const show = ()=>{
+    const pv = document.getElementById("briefPreview");
+    pv.style.display="block"; pv.textContent = brief;
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(brief).then(()=>{ toast("Brief copied — paste it into Claude or any AI with web search"); show(); },()=>{ show(); toast("Copy blocked — select the text below and copy manually"); });
+  } else { show(); toast("Select the text below and copy it"); }
+}
+
+/* ================= onboarding ================= */
+let obI = 0, obA = {goals:[]};
+function obFlowSteps(){
+  const r = obA.role;
+  let f = ["auth","age","role"];
+  if(r==="hs") f.push("school","goals");
+  else if(r==="college") f.push("school","resume","activities","goals");
+  else if(r==="pro") f.push("proinfo","resume");
+  return f.concat(["tour1","tour2","tour3","proplan","done"]);
+}
+function obShow(){ document.getElementById("onboard").classList.add("open"); obRender(); }
+function obHide(){ document.getElementById("onboard").classList.remove("open"); }
+function obG(id){ const el=document.getElementById(id); return el?el.value.trim():""; }
+function obSetRole(r){ obA.role=r; obI++; obRender(); }
+function obToggleGoal(g){
+  const i=obA.goals.indexOf(g);
+  if(i>=0) obA.goals.splice(i,1); else obA.goals.push(g);
+  obRender();
+}
+function obAuth(method){
+  data.account = {method:"google", name:"", email:"Google account"};
+  save(); obI++; obRender();
+}
+function obAuthEmail(){
+  const n=obG("ob_name"), e=obG("ob_email");
+  if(!/.+@.+\..+/.test(e)){ toast("Enter a valid email"); return; }
+  data.account = {method:"email", name:n, email:e};
+  obA.name = n; save(); obI++; obRender();
+}
+function obSkipAuth(){ obI++; obRender(); }
+function obCollect(){
+  const s = obFlowSteps()[obI];
+  if(s==="age"){ const v=Number(obG("ob_age")); if(!v||v<10||v>100){ toast("Enter your age"); return false; } obA.age=v; }
+  if(s==="school"){ obA.school=obG("ob_school"); obA.year=obG("ob_year"); obA.gpa=obG("ob_gpa"); }
+  if(s==="resume"){ obA.resume=obG("ob_resume"); }
+  if(s==="activities"){ obA.acts=obG("ob_acts"); }
+  if(s==="proinfo"){ obA.expyears=obG("ob_exp"); obA.employed=obG("ob_emp"); }
+  if(s==="goals" && !obA.goals.length){ toast("Pick at least one goal"); return false; }
+  return true;
+}
+function obNext(){ if(!obCollect()) return; obI++; obRender(); }
+function obBack(){ if(obI>0){ obI--; obRender(); } }
+function obWaitlist(){ data.prowaitlist=true; save(); toast("You're on the Pro waitlist"); obI++; obRender(); }
+function obReplayTour(){
+  obA.role = obA.role || data.mode;
+  obI = obFlowSteps().indexOf("tour1");
+  closeSettings();
+  obShow();
+}
+function obFinish(){
+  const a=obA, p=data.profile;
+  if(a.name && !p.name) p.name=a.name;
+  if(a.age) p.age=a.age;
+  if(a.role) data.mode=a.role;
+  if(a.school) p.school=a.school;
+  if(a.year) p.year=a.year;
+  if(a.gpa) p.gpa=a.gpa;
+  if(a.acts) p.memberships=(p.memberships? p.memberships+", ":"")+a.acts;
+  if(a.goals && a.goals.length) p.goals=a.goals.join(", ");
+  if(a.expyears) p.experience=a.expyears;
+  if(a.employed) p.employed=a.employed;
+  if(a.resume) data.onboardResume=a.resume;
+  data.onboarded=true; save();
+  obHide(); buildNav(); showTab(); renderAll();
+  if(data.onboardResume){
+    const r1=document.getElementById("rb_raw"); if(r1&&!r1.value) r1.value=data.onboardResume;
+    const r2=document.getElementById("resumeText"); if(r2&&!r2.value) r2.value=data.onboardResume;
+  }
+  const fn=(p.nickname||p.name||"").split(" ")[0];
+  toast("Welcome to Waypoint"+(fn?", "+fn:"")+"!");
+}
+function obRender(){
+  const steps = obFlowSteps();
+  if(obI>=steps.length) obI=steps.length-1;
+  const s = steps[obI];
+  const dots = '<div class="obdots">'+steps.map((x,i)=>'<span class="'+(i<=obI?"on":"")+'"></span>').join("")+'</div>';
+  let h="", nav=true;
+
+  if(s==="auth"){
+    nav=false;
+    h='<div style="text-align:center"><div class="logo" style="justify-content:center;font-size:22px;margin-bottom:6px"><span>🧭</span> Waypoint</div>'+
+      '<p class="sub" style="margin-bottom:20px">Scholarships, internships, college apps, and jobs —<br>tracked in one place, with AI doing the heavy lifting.</p></div>'+
+      '<button class="obchoice" style="text-align:center" onclick="obAuth(\'google\')">Continue with Google</button>'+
+      '<div class="sub" style="text-align:center;margin:10px 0">or create an account with email</div>'+
+      '<div class="pgrid"><div><span class="flabel">Name</span><input id="ob_name"></div><div><span class="flabel">Email</span><input id="ob_email" type="email"></div></div>'+
+      '<button class="btn primary" style="width:100%" onclick="obAuthEmail()">Create account</button>'+
+      '<div style="text-align:center;margin-top:10px"><button class="sbtn" style="width:auto;display:inline-block" onclick="obSkipAuth()">Skip for now</button></div>'+
+      '<div class="hint" style="text-align:center;margin-top:10px">Preview build — your account is stored on this device only.</div>';
+  }
+  if(s==="age"){
+    h='<h2>How old are you?</h2><p class="sub" style="margin-bottom:14px">Some opportunities have age requirements — this helps filter them.</p>'+
+      '<input id="ob_age" type="number" min="10" max="100" placeholder="e.g., 17" value="'+(obA.age||"")+'" style="max-width:160px">';
+  }
+  if(s==="role"){
+    nav=false;
+    h='<h2>I am a…</h2><p class="sub" style="margin-bottom:14px">This sets up the right trackers for you.</p>'+
+      '<button class="obchoice'+(obA.role==="hs"?" sel":"")+'" onclick="obSetRole(\'hs\')">Highschool student<div class="sub">College applications, scholarships, and costs</div></button>'+
+      '<button class="obchoice'+(obA.role==="college"?" sel":"")+'" onclick="obSetRole(\'college\')">College student<div class="sub">Scholarships, internships, research, and more</div></button>'+
+      '<button class="obchoice'+(obA.role==="pro"?" sel":"")+'" onclick="obSetRole(\'pro\')">Professional<div class="sub">Job applications matched to your qualifications</div></button>'+
+      (obI>0?'<div style="margin-top:6px"><button class="sbtn" style="width:auto" onclick="obBack()">← Back</button></div>':"");
+  }
+  if(s==="school"){
+    const yrs = obA.role==="hs" ? ["","Freshman","Sophomore","Junior","Senior"] : ["","Freshman","Sophomore","Junior","Senior","Graduate student"];
+    h='<h2>About your school</h2><p class="sub" style="margin-bottom:14px">Used for eligibility — school-specific and regional opportunities are often the easiest wins.</p>'+
+      '<div class="pgrid">'+
+      '<div><span class="flabel">School</span><input id="ob_school" value="'+esc(obA.school||"")+'" placeholder="'+(obA.role==="hs"?"e.g., Allentown Central High":"e.g., Penn State University")+'"></div>'+
+      '<div><span class="flabel">Year</span><select id="ob_year">'+yrs.map(y=>'<option'+(obA.year===y?" selected":"")+'>'+y+'</option>').join("")+'</select></div>'+
+      '<div><span class="flabel">GPA</span><input id="ob_gpa" value="'+esc(obA.gpa||"")+'" placeholder="e.g., 3.7"></div></div>';
+  }
+  if(s==="resume"){
+    h='<h2>Paste your resume <span class="sub" style="font-size:14px">(optional)</span></h2>'+
+      '<p class="sub" style="margin-bottom:14px">Waypoint uses it to understand your background — it powers the Resume Studio and makes discovery matches sharper. You can skip and add it later.</p>'+
+      '<textarea id="ob_resume" rows="8" placeholder="Paste your resume text here…">'+esc(obA.resume||"")+'</textarea>';
+  }
+  if(s==="activities"){
+    h='<h2>Your activities</h2><p class="sub" style="margin-bottom:14px">Extracurriculars, associations, and organizations unlock member-only scholarships — often the least competitive ones.</p>'+
+      '<textarea id="ob_acts" rows="4" placeholder="e.g., SHPE, BMES, intramural soccer, volunteer EMT, honor society…">'+esc(obA.acts||"")+'</textarea>';
+  }
+  if(s==="proinfo"){
+    h='<h2>Your experience</h2>'+
+      '<div class="pgrid" style="margin-top:14px">'+
+      '<div><span class="flabel">Years of professional experience</span><select id="ob_exp">'+["","Less than 1 year","1–2 years","3–5 years","6–10 years","10+ years"].map(o=>'<option'+(obA.expyears===o?" selected":"")+'>'+o+'</option>').join("")+'</select></div>'+
+      '<div><span class="flabel">Employment status</span><select id="ob_emp">'+["","Employed full-time","Employed part-time","Not employed — actively looking","Between roles / career break"].map(o=>'<option'+(obA.employed===o?" selected":"")+'>'+o+'</option>').join("")+'</select></div></div>';
+  }
+  if(s==="goals"){
+    const opts = obA.role==="hs"
+      ? ["Apply to college","Apply to scholarships","Find summer programs & internships","Research opportunities"]
+      : ["Apply to scholarships","Apply to internships","Research opportunities","Prepare for full-time jobs"];
+    h='<h2>What are your goals?</h2><p class="sub" style="margin-bottom:14px">Pick one or more — Waypoint tailors discovery around these.</p>'+
+      opts.map(o=>'<button class="obchoice'+(obA.goals.includes(o)?" sel":"")+'" onclick="obToggleGoal(\''+o.replace(/'/g,"\\'")+'\')">'+o+'</button>').join("");
+  }
+  if(s==="tour1"){
+    h='<h2>Track everything in one place</h2>'+
+      '<p class="sub" style="margin-bottom:14px">Every scholarship, application, and deadline lives in sortable trackers — with status pipelines, fit ratings, and one-click calendar export so you never miss a date.</p>'+
+      '<div class="panel" style="margin:0"><div class="dlitem"><div><div class="sname">SHPE Foundation Scholarship</div><div class="sorg">Scholarship · $5,000</div></div><div style="display:flex;gap:8px;align-items:center">'+statusBadge("In Progress")+'<span class="deadline-chip dl-urgent">12d left</span></div></div>'+
+      '<div class="dlitem"><div><div class="sname">Software Engineering Intern</div><div class="sorg">Internship · $40/hr</div></div><div style="display:flex;gap:8px;align-items:center">'+statusBadge("Interviewing")+'<span class="deadline-chip dl-ok">45d left</span></div></div></div>';
+  }
+  if(s==="tour2"){
+    h='<h2>Resume Studio</h2>'+
+      '<p class="sub" style="margin-bottom:10px">Paste your resume, tell it what to add or remove, and watch it become a polished, professional PDF — same clean template every time, ready in one click.</p>'+
+      '<div class="rsvwrap"><div class="rsv">'+
+        '<div class="l name"></div>'+
+        '<div class="l sec"></div>'+
+        '<div class="l b"></div><div class="l b d1"></div><div class="l b d2"></div>'+
+        '<div class="l sec"></div>'+
+        '<div class="l b d1"></div><div class="l b d2"></div>'+
+      '</div></div>';
+  }
+  if(s==="tour3"){
+    h='<h2>Discovery — built around you</h2>'+
+      '<p class="sub" style="margin-bottom:14px">Your profile (school, GPA, memberships, background, goals) builds personalized search briefs that surface niche opportunities you actually qualify for — and they import straight into your tracker, rated 1–5 for fit.</p>'+
+      '<div class="panel" style="margin:0"><div class="dlitem"><span>Profile completeness</span><b>Strong matches</b></div><div class="bar"><div style="width:78%;background:var(--brand)"></div></div><div class="hint">The more Waypoint knows, the more it finds.</div></div>';
+  }
+  if(s==="proplan"){
+    nav=false;
+    h='<h2>Want Waypoint to do the hard work?</h2>'+
+      '<p class="sub" style="margin-bottom:14px">With <b>Waypoint Pro</b>, you don\'t search — Waypoint does:</p>'+
+      '<div class="panel" style="margin-bottom:14px">'+
+      '<div class="dlitem"><span>Scans the web for you <b>3× every week</b></span></div>'+
+      '<div class="dlitem"><span>Finds <b>niche opportunities</b> matched to your exact profile — memberships, background, school, goals</span></div>'+
+      '<div class="dlitem"><span>Adds them to your tracker automatically, rated for fit</span></div>'+
+      '<div class="dlitem"><span>AI resume rewrites + cloud sync across devices</span></div></div>'+
+      '<div style="font-weight:800;margin-bottom:14px">~$4.99/month — coming soon</div>'+
+      '<button class="btn primary" style="width:100%;margin-bottom:8px" onclick="obWaitlist()">Join the waitlist</button>'+
+      '<button class="btn" style="width:100%" onclick="obI++;obRender()">Continue with Free</button>'+
+      '<div style="margin-top:10px"><button class="sbtn" style="width:auto" onclick="obBack()">← Back</button></div>';
+  }
+  if(s==="done"){
+    nav=false;
+    const fn=(obA.name||data.profile.name||"").split(" ")[0];
+    h='<h2>You\'re all set'+(fn?", "+esc(fn):"")+'!</h2>'+
+      '<p class="sub" style="margin-bottom:18px">Your trackers are ready'+(obA.goals.length?' and tuned to your goals: <b>'+esc(obA.goals.join(", "))+'</b>':"")+'. Explore the sample data, then make it yours.</p>'+
+      '<button class="btn primary" style="width:100%" onclick="obFinish()">Open Waypoint</button>';
+  }
+
+  const actions = nav ? '<div class="obacts">'+(obI>0?'<button class="btn" onclick="obBack()">← Back</button>':'<span></span>')+'<button class="btn primary" onclick="obNext()">Continue →</button></div>' : "";
+  document.getElementById("obCard").innerHTML = dots + h + actions;
+}
+
+/* ================= settings ================= */
+const LANGS = [["en-US","English (United States)"],["fr-FR","Français (France)"],["de-DE","Deutsch (Deutschland)"],["hi-IN","हिन्दी (भारत)"],["id-ID","Indonesia (Indonesia)"],["it-IT","Italiano (Italia)"],["ja-JP","日本語 (日本)"],["ko-KR","한국어 (대한민국)"],["pt-BR","Português (Brasil)"],["es-419","Español (Latinoamérica)"],["es-ES","Español (España)"]];
+let curSet = "general";
+function openSettings(tab){
+  curSet = tab || "general";
+  renderSettings();
+  document.getElementById("settingsBack").classList.add("open");
+}
+function closeSettings(){ document.getElementById("settingsBack").classList.remove("open"); }
+function setLang(v){ data.lang = v; save(); toast("Language saved — full translations are on the roadmap"); }
+
+function renderSettings(){
+  const tabs = [["general","General"],["account","Account"],["privacy","Privacy & Data"],["billing","Billing"],["usage","Usage"],["help","Help"]];
+  document.getElementById("setNav").innerHTML = tabs.map(([id,lbl])=>
+    '<button class="sbtn'+(curSet===id?' active':'')+'" onclick="openSettings(\''+id+'\')">'+lbl+'</button>').join("");
+  let h = "";
+  const p = data.profile;
+
+  if(curSet==="general"){
+    const seg = [["light","☀️"],["dark","🌙"],["system","💻"]].map(([v,l])=>
+      '<button class="'+(data.theme===v?"active":"")+'" onclick="setTheme(\''+v+'\')" title="'+v+'">'+l+'</button>').join("");
+    const motionSeg = [["system","System"],["reduced","Reduced"]].map(([v,l])=>
+      '<button class="'+(data.motion===v?"active":"")+'" onclick="setMotion(\''+v+'\')">'+l+'</button>').join("");
+    const initSrc = (p.nickname && p.nickname.trim()) || (p.name||"").trim();
+    const init = initSrc ? initSrc.charAt(0).toUpperCase() : "?";
+    h = '<h3>Profile</h3>'+
+      '<div class="setrow"><b>Avatar</b><span class="avatar" style="width:36px;height:36px;font-size:16px">'+esc(init)+'</span></div>'+
+      '<div class="setrow"><b>Full name</b><input style="max-width:250px" value="'+esc(p.name||"")+'" onchange="setPName(this.value)"></div>'+
+      '<div class="setrow"><b>What should Waypoint call you?</b><input style="max-width:250px" value="'+esc(p.nickname||"")+'" onchange="setNick(this.value)"></div>'+
+      '<div class="setrow"><div><b>I am a…</b><div class="sub">Sets which trackers you see</div></div><select style="width:auto" onchange="setRoleType(this.value)">'+
+        [["hs","Highschool student"],["college","College student"],["pro","Professional"]].map(([v,l])=>'<option value="'+v+'"'+(data.mode===v?" selected":"")+'>'+l+'</option>').join("")+'</select></div>'+
+      '<h3 style="margin-top:22px">Preferences</h3>'+
+      '<div class="setrow"><b>Appearance</b><div class="modeswitch">'+seg+'</div></div>'+
+      '<div class="setrow"><b>App font</b><select style="width:auto" onchange="setFont(this.value)">'+
+        [["default","Default"],["serif","Serif"],["mono","Mono"]].map(([v,l])=>'<option value="'+v+'"'+(data.font===v?" selected":"")+'>'+l+'</option>').join("")+'</select></div>'+
+      '<div class="setrow"><div><b>Motion</b><div class="sub">Reduce animation in interface elements</div></div><div class="modeswitch">'+motionSeg+'</div></div>'+
+      '<div class="setrow"><div><b>Language</b><div class="sub">English is fully supported — other languages on the roadmap</div></div><select style="width:auto" onchange="setLang(this.value)">'+
+        LANGS.map(([v,l])=>'<option value="'+v+'"'+(data.lang===v?" selected":"")+'>'+l+'</option>').join("")+'</select></div>'+
+      '<h3 style="margin-top:22px">Notifications</h3>'+
+      '<div class="setrow"><div><b>Calendar deadline alarms</b><div class="sub">Include 1-week and 1-day reminders in exported calendar events</div></div><input type="checkbox" style="width:auto;transform:scale(1.3)"'+(data.alarms?" checked":"")+' onchange="setAlarms(this.checked)"></div>';
+  }
+
+  if(curSet==="account"){
+    const ua = navigator.userAgent;
+    const browser = ua.includes("Edg")?"Edge":ua.includes("Chrome")?"Chrome":ua.includes("Firefox")?"Firefox":ua.includes("Safari")?"Safari":"Browser";
+    const plat = ua.includes("Windows")?"Windows":ua.includes("Mac")?"macOS":ua.includes("Linux")?"Linux":ua.includes("Android")?"Android":ua.includes("iPhone")||ua.includes("iPad")?"iOS":"";
+    const acct = data.account
+      ? '<div class="setrow"><div><b>Signed in as</b><div class="sub">'+esc(data.account.name||"")+(data.account.name?" · ":"")+esc(data.account.email||"")+' (via '+esc(data.account.method)+')</div></div></div>'
+      : '<div class="setrow"><div><b>Not signed in</b><div class="sub">Accounts are stored on this device in this preview</div></div></div>';
+    h = '<h3>Account</h3>'+acct+
+      '<div class="setrow"><div><b>Log out</b><div class="sub">Returns to the welcome screen — your data stays on this device</div></div><button class="btn" onclick="obLogout()">Log out</button></div>'+
+      '<div class="setrow"><div><b>Delete account</b><div class="sub">Permanently erases all Waypoint data on this device</div></div><button class="btn danger" onclick="deleteAllData()">Delete account</button></div>'+
+      '<div class="setrow"><b>Device ID</b><code style="font-size:12px;background:var(--card2);border:1px solid var(--line);border-radius:6px;padding:4px 8px">'+esc(data.deviceId)+'</code></div>'+
+      '<h3 style="margin-top:22px">Active sessions</h3>'+
+      '<div class="table-scroll" style="box-shadow:none;border:1px solid var(--line)"><table><thead><tr><th>Device</th><th>Created</th><th>Last used</th></tr></thead><tbody>'+
+      '<tr><td><b>'+browser+(plat?" ("+plat+")":"")+'</b> <span class="badge" style="background:var(--brand-soft);color:var(--brand)">Current</span></td><td>'+esc(data.createdAt)+'</td><td>'+esc(data.lastUsed)+'</td></tr>'+
+      '</tbody></table></div>'+
+      '<p class="sub" style="margin-top:10px">Waypoint runs entirely on this device, so this is your only session. Your detailed discovery profile lives on the Profile & Discovery page.</p>';
+  }
+
+  if(curSet==="privacy"){
+    h = '<h3>Privacy & Data</h3>'+
+      '<p class="sub" style="margin-bottom:6px">Waypoint runs entirely on your device. Your applications, profile, and resume are stored in this browser only — there are no accounts, no servers, and nothing is ever uploaded.</p>'+
+      '<div class="setrow"><div><b>Export backup</b><div class="sub">Download everything as a JSON file — keep it safe or move to another device</div></div><button class="btn" onclick="exportBackup()">Export</button></div>'+
+      '<div class="setrow"><div><b>Restore backup</b><div class="sub">Load a previously exported backup file</div></div><button class="btn" onclick="document.getElementById(\'backupfile\').click()">Restore</button></div>'+
+      '<div class="setrow"><div><b>Clear sample data</b><div class="sub">Remove the example entries that ship with the app</div></div><button class="btn" onclick="clearSamples()">Clear</button></div>'+
+      '<div class="setrow"><div><b>Delete all data</b><div class="sub">Permanently erase everything — cannot be undone</div></div><button class="btn danger" onclick="deleteAllData()">Delete</button></div>';
+  }
+
+  if(curSet==="billing"){
+    h = '<h3>Billing</h3>'+
+      '<div class="panel" style="margin-top:8px"><b>Current plan: Free</b><div class="sub" style="margin-top:4px">All tracking features included — scholarships, internships, college apps, jobs, calendar export, CSV, Resume Studio. Runs on your device at no cost.</div></div>'+
+      '<div class="panel"><b>Waypoint Pro <span class="badge" style="background:var(--brand-soft);color:var(--brand)">coming soon</span></b>'+
+      '<div class="sub" style="margin-top:4px">Automatic AI discovery — new scholarships, internships, or jobs matched to your profile 3× per week, plus AI resume rewrites and cloud sync across devices.</div>'+
+      '<div style="margin-top:8px;font-weight:700">Planned: ~$4.99/month</div></div>'+
+      '<p class="sub">No payment is collected in this preview version.</p>';
+  }
+
+  if(curSet==="usage"){
+    const kb = (JSON.stringify(data).length/1024).toFixed(1);
+    const row=(l,v)=>'<div class="setrow"><b>'+l+'</b><span style="font-weight:700">'+v+'</span></div>';
+    const appliedCount = t=>items(t).filter(s=>TR[t].applied.includes(s.status)).length;
+    h = '<h3>Usage</h3>'+
+      row("Scholarships tracked", data.scholarships.length+" ("+appliedCount("scholarship")+" applied)")+
+      row("Internships tracked", data.internships.length+" ("+appliedCount("internship")+" applied)")+
+      row("College applications", data.colleges.length+" ("+appliedCount("college")+" submitted)")+
+      row("Jobs tracked", data.jobs.length+" ("+appliedCount("job")+" applied)")+
+      row("Scholarships won", fmtMoney(data.scholarships.filter(s=>s.status==="Accepted").reduce((a,s)=>a+(Number(s.amount)||0),0)))+
+      row("Storage used", kb+" KB (browser local storage)");
+  }
+
+  if(curSet==="help"){
+    const faq=(q,a)=>'<details><summary>'+q+'</summary><p>'+a+'</p></details>';
+    h = '<h3>Help</h3>'+
+      faq("How do I add scholarships, internships, colleges, or jobs?","Pick your mode in the sidebar (College, High School, or Professional), open a tracker page, and click + Add. You can also bulk-import a CSV — the importer auto-detects which tracker it belongs to and skips duplicates.")+
+      faq("How does AI discovery work?","Go to Profile & Discovery and fill out your profile (in Settings → Profile). Click a discovery brief button — it copies a personalized search prompt that excludes everything already in your tracker. Paste it into any AI with web search, save the reply as a .csv file, and import it. New matches appear rated 1–5 for fit.")+
+      faq("How do I get deadline reminders on my calendar?","Sidebar → Tools → Export calendar. This downloads an .ics file with every upcoming deadline (with 1-week and 1-day alarms) and application-opening dates. Open the file and your calendar app (Google, Apple, Outlook) adds the events.")+
+      faq("How does Resume Studio work?","Paste your current resume, add instructions for anything to add or remove, and copy the AI Rewrite Brief into any AI. Paste its reply back and import — your info fills a professional LaTeX template whose formatting never changes. Click Open in Overleaf for an instant PDF, no LaTeX knowledge needed.")+
+      faq("What do the Reach / Target / Safety labels mean?","A balanced college list usually has 2–3 reaches (hard to get into), 3–4 targets (good odds), and 2 safeties (very likely). The List Balance insight shows your spread.")+
+      faq("Where is my data stored? Is it private?","Everything lives in your browser's local storage on this device — no accounts, no servers, nothing uploaded. Use Settings → Privacy & Data → Export backup to save a copy or move devices.")+
+      faq("Why did my data disappear?","Local storage is per-browser and per-device. If you cleared browsing data or switched browsers, restore from a backup (Settings → Privacy & Data → Restore). Exporting a backup regularly is recommended.")+
+      faq("Can I share my tracker with a mentor or counselor?","Yes — export any tracker as CSV (sidebar → Tools) and send the file. They can open it in Excel or Google Sheets.")+
+      '<div style="margin-top:14px"><button class="btn" onclick="obReplayTour()">Replay the welcome tour</button></div>';
+  }
+
+  document.getElementById("setBody").innerHTML = h;
+}
+
+function exportBackup(){
+  downloadFile("waypoint-backup.json", JSON.stringify(data, null, 2), "application/json");
+  toast("Backup downloaded — keep it somewhere safe");
+}
+function importBackup(ev){
+  const file = ev.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      const o = JSON.parse(e.target.result);
+      if(!o || typeof o!=="object" || (!o.scholarships && !o.jobs && !o.colleges)) throw new Error("bad");
+      data = fix(o);
+      save(); applyTheme(); applySidebar(); buildNav(); renderAll(); renderResume(); updatePreview(); renderSettings();
+      toast("Backup restored ✓");
+    }catch(err){ toast("That doesn't look like a Waypoint backup file"); }
+    ev.target.value="";
+  };
+  reader.readAsText(file);
+}
+function obLogout(){
+  if(!confirm("Log out? Your data stays on this device.")) return;
+  data.account=null; data.onboarded=false; save(); location.reload();
+}
+function deleteAllData(){
+  if(!confirm("Delete ALL Waypoint data on this device? This cannot be undone.")) return;
+  localStorage.removeItem(LS_KEY);
+  localStorage.removeItem(OLD_KEY);
+  location.reload();
+}
+
+/* ================= banner / samples ================= */
+function hasSamples(){ return ["scholarship","internship","college","job"].some(t=>items(t).some(s=>s.sample)); }
+function renderBanner(){
+  document.getElementById("sampleBanner").style.display = (hasSamples() && !data.bannerDismissed) ? "flex" : "none";
+}
+function dismissBanner(){ data.bannerDismissed=true; save(); renderBanner(); }
+function clearSamples(){
+  ["scholarship","internship","college","job"].forEach(t=>{ data[TR[t].arr] = items(t).filter(s=>!s.sample); });
+  data.bannerDismissed = true;
+  save(); renderAll(); toast("Sample data cleared");
+}
+
+/* ================= resume studio (LaTeX) ================= */
+function emptyResume(){
+  return {header:{name:"",phone:"",email:"",linkedin:"",github:""},education:[],experience:[],projects:[],skills:{languages:"",frameworks:"",tools:"",libraries:""}};
+}
+function resumeTab(t){
+  document.getElementById("rbWrap").style.display = t==="build"?"block":"none";
+  document.getElementById("rcWrap").style.display = t==="check"?"block":"none";
+  document.getElementById("rtab_build").classList.toggle("active", t==="build");
+  document.getElementById("rtab_check").classList.toggle("active", t==="check");
+}
+function lt(s){
+  return String(s||"")
+    .replace(/\\/g,"\\textbackslash{}")
+    .replace(/([&%$#_{}])/g,"\\$1")
+    .replace(/~/g,"\\textasciitilde{}")
+    .replace(/\^/g,"\\textasciicircum{}");
+}
+function rbUpd(path, val){
+  const parts = path.split(".");
+  let o = data.resume;
+  for(let i=0;i<parts.length-1;i++) o = o[parts[i]];
+  o[parts[parts.length-1]] = val;
+  save(); updatePreview();
+}
+function rbUpdLines(path, val){
+  rbUpd(path, val.split("\n").map(l=>l.trim()).filter(Boolean));
+}
+function rbAdd(sec){
+  if(sec==="education") data.resume.education.push({school:"",location:"",degree:"",dates:""});
+  if(sec==="experience") data.resume.experience.push({title:"",dates:"",org:"",location:"",bullets:[]});
+  if(sec==="projects") data.resume.projects.push({name:"",tech:"",dates:"",bullets:[]});
+  save(); renderResume(); updatePreview();
+}
+function rbDel(sec,i){
+  data.resume[sec].splice(i,1);
+  save(); renderResume(); updatePreview();
+}
+function rIn(path,val,ph){
+  return '<input value="'+esc(val||"")+'" placeholder="'+esc(ph||"")+'" onchange="rbUpd(\''+path+'\',this.value)">';
+}
+function renderResume(){
+  const r = data.resume;
+  let h = '<h3>✏️ Edit sections</h3><p class="sub" style="margin-bottom:10px">Changes save automatically and update the LaTeX preview.</p>';
+  h += '<h4 class="subhead">Header</h4><div class="pgrid">'+
+    '<div><span class="flabel">Full name</span>'+rIn("header.name",r.header.name,"Jake Ryan")+'</div>'+
+    '<div><span class="flabel">Phone</span>'+rIn("header.phone",r.header.phone,"123-456-7890")+'</div>'+
+    '<div><span class="flabel">Email</span>'+rIn("header.email",r.header.email,"you@email.com")+'</div>'+
+    '<div><span class="flabel">LinkedIn</span>'+rIn("header.linkedin",r.header.linkedin,"linkedin.com/in/you")+'</div>'+
+    '<div><span class="flabel">GitHub / website</span>'+rIn("header.github",r.header.github,"github.com/you")+'</div></div>';
+
+  h += '<h4 class="subhead">Education</h4>';
+  r.education.forEach((e,i)=>{
+    h += '<div class="pgrid" style="border:1px solid var(--line);border-radius:10px;padding:10px;position:relative">'+
+      '<div><span class="flabel">School</span>'+rIn("education."+i+".school",e.school,"Southwestern University")+'</div>'+
+      '<div><span class="flabel">Location</span>'+rIn("education."+i+".location",e.location,"Georgetown, TX")+'</div>'+
+      '<div><span class="flabel">Degree</span>'+rIn("education."+i+".degree",e.degree,"B.S. in Computer Science")+'</div>'+
+      '<div><span class="flabel">Dates</span>'+rIn("education."+i+".dates",e.dates,"Aug. 2018 -- May 2021")+'</div>'+
+      '<div><button class="btn sm danger" onclick="rbDel(\'education\','+i+')">Remove</button></div></div>';
+  });
+  h += '<button class="btn sm" onclick="rbAdd(\'education\')">+ Add education</button>';
+
+  h += '<h4 class="subhead">Experience</h4>';
+  r.experience.forEach((e,i)=>{
+    h += '<div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:10px"><div class="pgrid">'+
+      '<div><span class="flabel">Title</span>'+rIn("experience."+i+".title",e.title,"Undergraduate Research Assistant")+'</div>'+
+      '<div><span class="flabel">Dates</span>'+rIn("experience."+i+".dates",e.dates,"June 2020 -- Present")+'</div>'+
+      '<div><span class="flabel">Organization</span>'+rIn("experience."+i+".org",e.org,"Texas A&M University")+'</div>'+
+      '<div><span class="flabel">Location</span>'+rIn("experience."+i+".location",e.location,"College Station, TX")+'</div></div>'+
+      '<span class="flabel">Bullet points (one per line)</span>'+
+      '<textarea rows="3" placeholder="Developed a REST API using FastAPI and PostgreSQL…" onchange="rbUpdLines(\'experience.'+i+'.bullets\',this.value)">'+esc((e.bullets||[]).join("\n"))+'</textarea>'+
+      '<div style="margin-top:6px"><button class="btn sm danger" onclick="rbDel(\'experience\','+i+')">Remove</button></div></div>';
+  });
+  h += '<button class="btn sm" onclick="rbAdd(\'experience\')">+ Add experience</button>';
+
+  h += '<h4 class="subhead">Projects</h4>';
+  r.projects.forEach((e,i)=>{
+    h += '<div style="border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:10px"><div class="pgrid">'+
+      '<div><span class="flabel">Project name</span>'+rIn("projects."+i+".name",e.name,"Gitlytics")+'</div>'+
+      '<div><span class="flabel">Tech / tools</span>'+rIn("projects."+i+".tech",e.tech,"Python, Flask, React")+'</div>'+
+      '<div><span class="flabel">Dates</span>'+rIn("projects."+i+".dates",e.dates,"June 2020 -- Present")+'</div></div>'+
+      '<span class="flabel">Bullet points (one per line)</span>'+
+      '<textarea rows="3" onchange="rbUpdLines(\'projects.'+i+'.bullets\',this.value)">'+esc((e.bullets||[]).join("\n"))+'</textarea>'+
+      '<div style="margin-top:6px"><button class="btn sm danger" onclick="rbDel(\'projects\','+i+')">Remove</button></div></div>';
+  });
+  h += '<button class="btn sm" onclick="rbAdd(\'projects\')">+ Add project</button>';
+
+  h += '<h4 class="subhead">Technical Skills</h4><div class="pgrid">'+
+    '<div><span class="flabel">Languages</span>'+rIn("skills.languages",r.skills.languages,"Java, Python, SQL…")+'</div>'+
+    '<div><span class="flabel">Frameworks</span>'+rIn("skills.frameworks",r.skills.frameworks,"React, Flask…")+'</div>'+
+    '<div><span class="flabel">Developer tools</span>'+rIn("skills.tools",r.skills.tools,"Git, Docker…")+'</div>'+
+    '<div><span class="flabel">Libraries</span>'+rIn("skills.libraries",r.skills.libraries,"pandas, NumPy…")+'</div></div>';
+
+  document.getElementById("rbForms").innerHTML = h;
+}
+
+function genTex(){
+  const r = data.resume;
+  const P = String.raw`%-------------------------
+% Resume in LaTeX — template by Jake Gutierrez (MIT), generated by Waypoint
+%-------------------------
+\documentclass[letterpaper,11pt]{article}
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+\input{glyphtounicode}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\addtolength{\oddsidemargin}{-0.5in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1in}
+\addtolength{\topmargin}{-.5in}
+\addtolength{\textheight}{1.0in}
+
+\urlstyle{same}
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+\titleformat{\section}{
+  \vspace{-4pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+\pdfgentounicode=1
+
+\newcommand{\resumeItem}[1]{
+  \item\small{
+    {#1 \vspace{-2pt}}
+  }
+}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\resumeProjectHeading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \small#1 & #2 \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+\begin{document}
+`;
+  const noProto = u=>String(u||"").replace(/^https?:\/\//,"");
+  const parts = [];
+  if(r.header.phone) parts.push(lt(r.header.phone));
+  if(r.header.email) parts.push("\\href{mailto:"+r.header.email+"}{\\underline{"+lt(r.header.email)+"}}");
+  if(r.header.linkedin) parts.push("\\href{https://"+noProto(r.header.linkedin)+"}{\\underline{"+lt(noProto(r.header.linkedin))+"}}");
+  if(r.header.github) parts.push("\\href{https://"+noProto(r.header.github)+"}{\\underline{"+lt(noProto(r.header.github))+"}}");
+  let out = P + "\n%----------HEADING----------\n\\begin{center}\n    \\textbf{\\Huge \\scshape "+lt(r.header.name||"Your Name")+"} \\\\ \\vspace{1pt}\n    \\small "+parts.join(" $|$ ")+"\n\\end{center}\n";
+
+  if(r.education.length){
+    out += "\n%-----------EDUCATION-----------\n\\section{Education}\n  \\resumeSubHeadingListStart\n";
+    r.education.forEach(e=>{
+      out += "    \\resumeSubheading\n      {"+lt(e.school)+"}{"+lt(e.location)+"}\n      {"+lt(e.degree)+"}{"+lt(e.dates)+"}\n";
+    });
+    out += "  \\resumeSubHeadingListEnd\n";
+  }
+  if(r.experience.length){
+    out += "\n%-----------EXPERIENCE-----------\n\\section{Experience}\n  \\resumeSubHeadingListStart\n";
+    r.experience.forEach(e=>{
+      out += "\n    \\resumeSubheading\n      {"+lt(e.title)+"}{"+lt(e.dates)+"}\n      {"+lt(e.org)+"}{"+lt(e.location)+"}\n";
+      if((e.bullets||[]).length){
+        out += "      \\resumeItemListStart\n";
+        e.bullets.forEach(b=>{ out += "        \\resumeItem{"+lt(b)+"}\n"; });
+        out += "      \\resumeItemListEnd\n";
+      }
+    });
+    out += "\n  \\resumeSubHeadingListEnd\n";
+  }
+  if(r.projects.length){
+    out += "\n%-----------PROJECTS-----------\n\\section{Projects}\n    \\resumeSubHeadingListStart\n";
+    r.projects.forEach(e=>{
+      const head = "\\textbf{"+lt(e.name)+"}"+(e.tech?" $|$ \\emph{"+lt(e.tech)+"}":"");
+      out += "      \\resumeProjectHeading\n          {"+head+"}{"+lt(e.dates)+"}\n";
+      if((e.bullets||[]).length){
+        out += "          \\resumeItemListStart\n";
+        e.bullets.forEach(b=>{ out += "            \\resumeItem{"+lt(b)+"}\n"; });
+        out += "          \\resumeItemListEnd\n";
+      }
+    });
+    out += "    \\resumeSubHeadingListEnd\n";
+  }
+  const sk = r.skills;
+  if(sk.languages||sk.frameworks||sk.tools||sk.libraries){
+    const lines = [];
+    if(sk.languages) lines.push("     \\textbf{Languages}{: "+lt(sk.languages)+"}");
+    if(sk.frameworks) lines.push("     \\textbf{Frameworks}{: "+lt(sk.frameworks)+"}");
+    if(sk.tools) lines.push("     \\textbf{Developer Tools}{: "+lt(sk.tools)+"}");
+    if(sk.libraries) lines.push("     \\textbf{Libraries}{: "+lt(sk.libraries)+"}");
+    out += "\n%-----------TECHNICAL SKILLS-----------\n\\section{Technical Skills}\n \\begin{itemize}[leftmargin=0.15in, label={}]\n    \\small{\\item{\n"+lines.join(" \\\\\n")+"\n    }}\n \\end{itemize}\n";
+  }
+  out += "\n\\end{document}\n";
+  return out;
+}
+function updatePreview(){
+  const el = document.getElementById("texPreview");
+  if(el) el.textContent = genTex();
+}
+function downloadTex(){ downloadFile("resume.tex", genTex(), "text/plain"); toast("resume.tex downloaded"); }
+function copyTex(){
+  navigator.clipboard.writeText(genTex()).then(()=>toast("LaTeX copied"),()=>toast("Copy blocked — use Download instead"));
+}
+function openOverleaf(){
+  const form = document.createElement("form");
+  form.method = "POST"; form.action = "https://www.overleaf.com/docs"; form.target = "_blank";
+  const inp = document.createElement("textarea");
+  inp.name = "encoded_snip"; inp.value = encodeURIComponent(genTex());
+  form.appendChild(inp); document.body.appendChild(form);
+  form.submit(); form.remove();
+  toast("Opening in Overleaf — hit Recompile there for your PDF");
+}
+function copyResumeBrief(){
+  const raw = document.getElementById("rb_raw").value.trim();
+  if(!raw){ toast("Paste your current resume text first"); return; }
+  const instr = document.getElementById("rb_instr").value.trim();
+  const schema = JSON.stringify(emptyResume(), null, 1);
+  const lines = [
+    "Rewrite my resume to be as professional and impactful as possible:",
+    "- Start every bullet with a strong action verb; quantify results wherever truthful (numbers, %, $).",
+    "- No personal pronouns. Concise, one-page-resume style. Do NOT invent experience I don't have.",
+    instr ? "- My specific instructions: "+instr : "",
+    "",
+    "MY CURRENT RESUME:",
+    raw,
+    "",
+    "Respond with ONLY a JSON object (no other text, no code fences) in exactly this structure — keep dates in the format 'Aug. 2018 -- May 2021':",
+    schema
+  ].filter(Boolean);
+  const brief = lines.join("\n");
+  navigator.clipboard.writeText(brief).then(()=>toast("Brief copied — paste into any AI, then paste its reply below"),()=>toast("Copy blocked — select and copy manually"));
+}
+function rbImport(){
+  let txt = document.getElementById("rb_json").value.trim();
+  if(!txt){ toast("Paste the AI's reply first"); return; }
+  const fence = txt.match(/```(?:json)?\s*\n?([\s\S]*?)```/);
+  if(fence) txt = fence[1].trim();
+  const start = txt.indexOf("{"), end = txt.lastIndexOf("}");
+  if(start>=0 && end>start) txt = txt.slice(start, end+1);
+  try{
+    const o = JSON.parse(txt);
+    const base = emptyResume();
+    data.resume = {
+      header: Object.assign(base.header, o.header||{}),
+      education: Array.isArray(o.education)? o.education : [],
+      experience: Array.isArray(o.experience)? o.experience : [],
+      projects: Array.isArray(o.projects)? o.projects : [],
+      skills: Object.assign(base.skills, o.skills||{})
+    };
+    data.resume.experience.forEach(e=>{ if(!Array.isArray(e.bullets)) e.bullets=[]; });
+    data.resume.projects.forEach(e=>{ if(!Array.isArray(e.bullets)) e.bullets=[]; });
+    save(); renderResume(); updatePreview();
+    document.getElementById("rb_json").value = "";
+    toast("Imported ✓ — review the sections, then Open in Overleaf");
+  }catch(err){ toast("Couldn't parse that — make sure you pasted the full JSON reply"); }
+}
+
+/* ================= resume check ================= */
+const ACTION_VERBS = ["achieved","analyzed","built","collaborated","conducted","created","designed","developed","directed","engineered","established","evaluated","executed","founded","generated","implemented","improved","increased","initiated","launched","led","managed","mentored","optimized","organized","oversaw","presented","produced","programmed","reduced","researched","resolved","spearheaded","streamlined","taught","tested","trained","wrote","automated","coordinated","delivered","drove"];
+const WEAK_PHRASES = ["responsible for","duties included","worked on","helped with","assisted with","was involved in","participated in","tasked with"];
+
+function analyzeResume(){
+  const text = document.getElementById("resumeText").value;
+  const out = document.getElementById("resumeResults");
+  if(!text.trim()){ out.innerHTML = '<div class="empty">Paste your resume text first.</div>'; return; }
+  const lower = text.toLowerCase();
+  const words = text.trim().split(/\s+/).length;
+  const lines = text.split("\n").map(l=>l.trim()).filter(Boolean);
+  const bullets = lines.filter(l=>/^[-•·*▪◦]|^\d+\./.test(l) || (l.length>30 && l.length<300 && !/[:]$/.test(l) && /^[A-Z]/.test(l)));
+  const candidateBullets = bullets.length ? bullets : lines.filter(l=>l.length>30);
+
+  let score = 100;
+  const findings = [];
+  const good = m=>findings.push({i:"✅",m});
+  const warn = (m,p)=>{findings.push({i:"⚠️",m}); score-=p;};
+  const bad = (m,p)=>{findings.push({i:"❌",m}); score-=p;};
+
+  if(words<150) warn("Very short ("+words+" words). Most one-page resumes run 350–600 words — add detail to your strongest experiences.",10);
+  else if(words>900) warn("Long ("+words+" words). One tight page beats two loose ones — cut older or weaker items.",8);
+  else good("Good length ("+words+" words).");
+
+  const quantified = candidateBullets.filter(l=>/\d/.test(l)).length;
+  const qPct = candidateBullets.length? Math.round(quantified/candidateBullets.length*100):0;
+  if(qPct>=50) good(qPct+"% of bullet points include numbers — strong quantification.");
+  else if(qPct>=25) warn("Only "+qPct+"% of bullets have numbers. Add metrics: team size, % improvement, $ amounts, users served, hours saved.",8);
+  else bad("Almost no quantified results ("+qPct+"%). Reviewers skim — numbers stop the eye. Add measurable impact wherever possible.",15);
+
+  const verbStarts = candidateBullets.filter(l=>{
+    const first = l.replace(/^[-•·*▪◦\d.\s]+/,"").split(/\s+/)[0].toLowerCase();
+    return ACTION_VERBS.includes(first);
+  }).length;
+  const vPct = candidateBullets.length? Math.round(verbStarts/candidateBullets.length*100):0;
+  if(vPct>=60) good(vPct+"% of bullets start with strong action verbs.");
+  else warn("Only "+vPct+"% of bullets start with action verbs (Led, Built, Improved…). Rewrite openings to lead with what YOU did.",10);
+
+  const weakFound = WEAK_PHRASES.filter(p=>lower.includes(p));
+  if(weakFound.length) bad('Weak phrases found: "'+weakFound.join('", "')+'". Replace with direct action verbs.',6*weakFound.length);
+  else good("No weak filler phrases detected.");
+
+  const pronouns = (lower.match(/\b(i|my|me|we|our)\b/g)||[]).length;
+  if(pronouns>2) warn(pronouns+" personal pronouns (I, my, we…). Resumes drop pronouns — start with the verb instead.",5);
+  else good("Minimal personal pronouns.");
+
+  if(!/@/.test(text)) warn("No email detected — make sure contact info is at the top.",4);
+  if(!/(gpa|grade point)/i.test(text)) findings.push({i:"💡",m:"No GPA listed. If yours is 3.0+, include it — many scholarships filter on GPA."});
+  if(!/(education)/i.test(text)) warn("No 'Education' section detected — for student resumes this should come first.",5);
+
+  score = Math.max(0,Math.min(100,score));
+  const color = score>=80?"var(--green)":score>=60?"var(--amber)":"var(--red)";
+  out.innerHTML =
+    '<div style="display:flex;align-items:baseline;gap:10px;margin-bottom:8px"><div class="score" style="color:'+color+'">'+score+'</div><div class="sub">/ 100</div></div>'+
+    findings.map(f=>'<div class="finding"><span class="ficon">'+f.i+'</span><span>'+f.m+'</span></div>').join("")+
+    '<div class="hint" style="margin-top:12px">Automated scan of structure and wording — re-run after each edit to watch your score climb.</div>';
+}
+
+/* ================= render & init ================= */
+function renderAll(){
+  renderBanner();
+  renderDashboard();
+  ["scholarship","internship","college","job"].forEach(renderList);
+  renderInsights();
+  renderProfile();
+}
+document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeModal(); closeSettings(); } });
+if(window.matchMedia){
+  window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{ if(data.theme==="system"){ applyTheme(); renderAll(); } });
+}
+buildListSections();
+buildNav();
+applyTheme();
+applyPrefs();
+applySidebar();
+renderAll();
+renderResume();
+updatePreview();
+resumeTab("build");
+if(data.onboardResume){
+  const r1=document.getElementById("rb_raw"); if(r1&&!r1.value) r1.value=data.onboardResume;
+  const r2=document.getElementById("resumeText"); if(r2&&!r2.value) r2.value=data.onboardResume;
+}
+if(!data.onboarded) obShow();
+save();
+/* Waypoint v3 — College / High School / Professional */
+</script>
+</body>
+</html>
