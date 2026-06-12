@@ -35,7 +35,7 @@
   a{color:var(--brand)}
 
   header{background:var(--bg);position:sticky;top:0;z-index:50}
-  .hwrap{padding:12px 20px;display:flex;align-items:center;gap:14px;max-width:1420px;margin:0 auto}
+  .hwrap{padding:12px 20px;display:flex;align-items:center;gap:14px}
   .logo{font-weight:800;font-size:19px;letter-spacing:-.4px;display:flex;align-items:center;gap:9px;white-space:nowrap}
   .logo span{background:var(--brand);color:var(--brand-text);border-radius:10px;width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;font-size:17px}
   .modeswitch{display:flex;background:var(--gray-soft);border-radius:9px;padding:3px;gap:2px}
@@ -133,6 +133,14 @@
   .sbtn .nicon{font-size:18px;width:20px;display:inline-flex;justify-content:center;flex-shrink:0}
   .sbtn:hover{background:var(--card2);color:var(--ink)}
   .sbtn.active{background:var(--brand-soft);color:var(--brand);font-weight:700}
+  .addtr{margin-top:4px}
+  .addtr>summary{list-style:none;color:var(--muted)}
+  .addtr>summary::-webkit-details-marker{display:none}
+  .addtr[open]>summary{color:var(--brand)}
+  .addtr-menu{padding:4px 0 4px 8px}
+  .addtr-opt{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:none;border:none;padding:8px 12px;border-radius:10px;font-size:13.5px;font-weight:600;color:var(--muted);cursor:pointer}
+  .addtr-opt:hover{background:var(--card2);color:var(--brand)}
+  .addtr-opt .nicon{font-size:16px;width:18px;display:inline-flex;justify-content:center}
   #scrim{display:none;position:fixed;inset:0;background:rgba(10,15,30,.4);z-index:55}
 
   main{max-width:1180px;margin:0 20px 0 246px;padding:26px 10px 80px;transition:margin .2s}
@@ -177,6 +185,13 @@
   tr:last-child td{border-bottom:none}
   tr.rowlink:hover td{background:var(--card2);cursor:pointer}
   .sname{font-weight:700}
+  a.applylink{color:var(--ink);text-decoration:none}
+  a.applylink:hover{color:var(--brand);text-decoration:underline}
+  a.applylink i{font-size:13px;opacity:.55;vertical-align:-1px}
+  a.applylink:hover i{opacity:1}
+  .listhead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .listhead .btn{color:var(--muted)}
+  .listhead .btn:hover{color:var(--red);border-color:var(--red)}
   .sorg{font-size:12.5px;color:var(--muted)}
   .fit{color:#eab308;font-size:13px;letter-spacing:1px;white-space:nowrap}
   .reqicons{font-size:11.5px;color:var(--muted);white-space:nowrap}
@@ -267,6 +282,7 @@
   <div class="snav">
     <div class="slabel" style="margin-top:0">Navigate</div>
     <div id="mainNav"></div>
+    <div id="addTrackerWrap"></div>
   </div>
   <div class="sfoot">
     <button class="sbtn" onclick="openSettings('help')"><span class="nicon"><i class="ti ti-help-circle"></i></span>Help</button>
@@ -677,8 +693,10 @@ async function dscPersist(id, status){
 }
 // Map a discovery into the existing tracker item shape and add it (dedupe by name)
 function acceptIntoTracker(d){
-  const map = { scholarship:"scholarship", internship:"internship", research:"internship", job:"job" };
+  const map = { scholarship:"scholarship", internship:"internship", research:"research", job:"job" };
   const t = map[d.type] || "scholarship";
+  // accepting a discovery auto-creates the matching tracker if the user doesn't have it
+  if(!hasTracker(t)){ data.trackers = modeTrackers().concat([t]); buildNav(); }
   const arr = items(t);
   if(arr.some(x=>(x.name||"").toLowerCase()===(d.name||"").toLowerCase())) return; // already there
   const base = { id:uid(), _m:Date.now(), name:d.name, org:d.org||"", url:d.url||"",
@@ -686,6 +704,7 @@ function acceptIntoTracker(d){
     notes:(d.notes||"")+(d.eligibility?(" • "+d.eligibility):""), fit:d.fit||3, category:d.category||"" };
   if(t==="scholarship"){ base.amount = Number(d.amount_value)||0; base.elig=d.eligibility||""; }
   if(t==="internship"){ base.location=d.location||""; base.pay=d.amount||""; base.term="Summer 2027"; base.elig=d.eligibility||""; }
+  if(t==="research"){ base.location=d.location||""; base.pay=d.amount||d.pay_relocation||""; base.term="Summer 2027"; base.elig=d.eligibility||""; }
   if(t==="job"){ base.pay=d.amount||""; base.location=d.location||""; base.elig=d.eligibility||""; }
   arr.push(base); save();
 }
@@ -860,6 +879,31 @@ const TR = {
       {k:"notes",l:"Notes",t:"area"}
     ],
     csv:[["Job Title","name"],["Company","org"],["Location","location"],["Salary","pay"],["Job Type","jtype"],["Category","category"],["Qualifications","elig"],["Posted","opens","date"],["Apply By","deadline","date"],["Date Applied","dateApplied","date"],["Status","status","status"],["URL","url"],["Cover Letter","cover","bool"],["Portfolio","portfolio","bool"],["References","references","bool"],["Fit Rating","fit","fit"],["Notes","notes"]]
+  },
+  research: {
+    label:"Research Program", plural:"Research", icon:"🔬", arr:"research",
+    statuses:["Not Applied","In Progress","Applied","Interviewing","Offer","Accepted","Rejected","Ghosted"],
+    applied:["Applied","Interviewing","Offer","Accepted","Rejected","Ghosted"],
+    cats:["REU","Lab Position","Fellowship","Summer Program","Thesis/Independent","Conference","Other"],
+    fields:[
+      {k:"name",l:"Program / Position *",t:"text",ph:"e.g., NSF REU — Biomedical Engineering",full:1,req:1},
+      {k:"org",l:"Institution / Lab",t:"text"},
+      {k:"location",l:"Location",t:"text",ph:"City, ST / Remote"},
+      {k:"pay",l:"Stipend / Funding",t:"text",ph:"$6,000 stipend · housing covered"},
+      {k:"term",l:"Term",t:"text",ph:"Summer 2027"},
+      {k:"category",l:"Category",t:"cat"},
+      {k:"url",l:"Application URL",t:"text",ph:"https://…"},
+      {k:"opens",l:"Applications Open",t:"date"},
+      {k:"deadline",l:"Deadline",t:"date"},
+      {k:"status",l:"Status",t:"status"},
+      {k:"dateApplied",l:"Date Applied",t:"date"},
+      {k:"fit",l:"Fit Rating",t:"fit"},
+      {k:"cover",l:"Statement of interest",t:"check"},
+      {k:"lor",l:"LOR required",t:"check"},
+      {k:"elig",l:"Requirements",t:"area",ph:"Major, GPA, citizenship, faculty rec…"},
+      {k:"notes",l:"Notes",t:"area"}
+    ],
+    csv:[["Program","name"],["Institution","org"],["Location","location"],["Stipend","pay"],["Term","term"],["Category","category"],["Requirements","elig"],["Opens","opens","date"],["Deadline","deadline","date"],["Date Applied","dateApplied","date"],["Status","status","status"],["URL","url"],["Statement","cover","bool"],["LOR","lor","bool"],["Fit Rating","fit","fit"],["Notes","notes"]]
   }
 };
 
@@ -897,7 +941,13 @@ function fix(d){
   d.deviceId = d.deviceId || (Date.now().toString(36)+Math.random().toString(36).slice(2,10));
   d.createdAt = d.createdAt || new Date().toISOString().slice(0,10);
   d.lastUsed = new Date().toISOString().slice(0,10);
-  d.scholarships = d.scholarships||[]; d.internships = d.internships||[]; d.colleges = d.colleges||[]; d.jobs = d.jobs||[];
+  d.scholarships = d.scholarships||[]; d.internships = d.internships||[]; d.colleges = d.colleges||[]; d.jobs = d.jobs||[]; d.research = d.research||[];
+  if(!Array.isArray(d.trackers) || !d.trackers.length){
+    if(d.mode==="hs") d.trackers = ["college","scholarship"];
+    else if(d.mode==="pro") d.trackers = ["job"];
+    else d.trackers = ["scholarship","internship"];
+  }
+  d.trackers = d.trackers.filter(t=>["scholarship","internship","research","college","job"].includes(t));
   d.profile = d.profile||{};
   if(!d.resume || !d.resume.header){
     d.resume = {header:{name:"",phone:"",email:"",linkedin:"",github:""},education:[],experience:[],projects:[],skills:{languages:"",frameworks:"",tools:"",libraries:""}};
@@ -930,10 +980,34 @@ function save(){
   scheduleSync();
 }
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+const ALL_TRACKERS = ["scholarship","internship","research","college","job"];
+// The user's active trackers. Single source of truth for which tabs show.
 function modeTrackers(){
-  if(data.mode==="hs") return ["college","scholarship"];
-  if(data.mode==="pro") return ["job"];
-  return ["internship","scholarship"];
+  if(Array.isArray(data.trackers) && data.trackers.length) return data.trackers.filter(t=>TR[t]);
+  // first run / legacy: seed from the old mode, then persist
+  let seed;
+  if(data.mode==="hs") seed = ["college","scholarship"];
+  else if(data.mode==="pro") seed = ["job"];
+  else seed = ["scholarship","internship"];
+  data.trackers = seed.slice();
+  return data.trackers;
+}
+function hasTracker(t){ return modeTrackers().includes(t); }
+function addTracker(t){
+  if(!TR[t] || hasTracker(t)) return;
+  data.trackers = modeTrackers().concat([t]);
+  save(); buildNav(); switchView("list-"+t);
+  toast(TR[t].plural+" tracker added");
+}
+function removeTracker(t){
+  if(!hasTracker(t)) return;
+  const n = items(t).length;
+  if(!confirm("Remove the "+TR[t].plural+" tracker"+(n?" and its "+n+" item"+(n>1?"s":""):"")+"? This can't be undone.")) return;
+  data.trackers = modeTrackers().filter(x=>x!==t);
+  if(data[TR[t].arr]) data[TR[t].arr] = [];
+  if(currentTab==="list-"+t) currentTab = "discover";
+  save(); buildNav(); showTab(); renderAll();
+  toast(TR[t].plural+" tracker removed");
 }
 function items(t){ return data[TR[t].arr]; }
 
@@ -1032,6 +1106,7 @@ function navTabs(){
 const NAV_ICONS = {
   dashboard:"ti-layout-dashboard", discover:"ti-sparkles",
   "list-scholarship":"ti-school", "list-internship":"ti-briefcase",
+  "list-research":"ti-microscope",
   "list-college":"ti-building-bank", "list-job":"ti-id-badge",
   insights:"ti-chart-bar", profile:"ti-user-circle", resume:"ti-file-text"
 };
@@ -1041,6 +1116,22 @@ function buildNav(){
     return '<button class="sbtn'+(currentTab===id?' active':'')+'" onclick="switchView(\''+id+'\')">'+
       '<span class="nicon"><i class="ti '+ic+'"></i></span>'+lbl+'</button>';
   }).join("");
+  buildAddTracker();
+}
+const TRACKER_ORDER = ["scholarship","internship","research","job","college"];
+function buildAddTracker(){
+  const wrap = document.getElementById("addTrackerWrap");
+  if(!wrap) return;
+  const avail = TRACKER_ORDER.filter(t=>TR[t] && !hasTracker(t));
+  if(!avail.length){ wrap.innerHTML = ""; return; }
+  const opts = avail.map(t=>
+    '<button class="addtr-opt" onclick="addTracker(\''+t+'\')"><span class="nicon"><i class="ti '+(NAV_ICONS["list-"+t]||"ti-plus")+'"></i></span>'+TR[t].plural+'</button>'
+  ).join("");
+  wrap.innerHTML =
+    '<details class="addtr">'+
+      '<summary class="sbtn"><span class="nicon"><i class="ti ti-plus"></i></span>Add tracker</summary>'+
+      '<div class="addtr-menu">'+opts+'</div>'+
+    '</details>';
 }
 function applySidebar(){
   document.body.classList.toggle("sbhidden", data.sidebar==="hidden");
@@ -1069,13 +1160,15 @@ function showTab(){
 /* ================= list sections ================= */
 function buildListSections(){
   const wrap = document.getElementById("listsContainer");
-  wrap.innerHTML = ["scholarship","internship","college","job"].map(t=>{
+  wrap.innerHTML = ["scholarship","internship","research","college","job"].map(t=>{
     const T = TR[t];
     let extra = "";
     if(t==="scholarship"){
       extra = '<select id="f_'+t+'_req" onchange="renderList(\''+t+'\')"><option value="">Any requirements</option><option value="essay">Essay required</option><option value="noessay">No essay</option><option value="lor">LOR required</option><option value="nolor">No LOR</option><option value="easy">No essay + no LOR</option></select>';
     } else if(t==="internship"){
       extra = '<select id="f_'+t+'_req" onchange="renderList(\''+t+'\')"><option value="">Any requirements</option><option value="cover">Cover letter</option><option value="nocover">No cover letter</option><option value="referral">Have referral</option></select>';
+    } else if(t==="research"){
+      extra = "";
     } else if(t==="job"){
       extra = '<select id="f_'+t+'_req" onchange="renderList(\''+t+'\')"><option value="">Any requirements</option><option value="cover">Cover letter</option><option value="nocover">No cover letter</option><option value="portfolio">Portfolio</option></select>';
     } else {
@@ -1091,11 +1184,14 @@ function buildListSections(){
     const heads = {
       scholarship:["Scholarship","Amount","Category","Deadline","Status","Fit","Reqs",""],
       internship:["Position","Pay","Term","Category","Deadline","Status","Fit","Reqs",""],
+      research:["Program","Stipend","Term","Category","Deadline","Status","Fit","Reqs",""],
       college:["College","List","Plan","Deadline","Cost","Status","Reqs",""],
       job:["Job","Salary","Type","Category","Apply By","Status","Fit","Reqs",""]
     }[t];
     return '<section id="view-list-'+t+'" class="view">'+
-      '<h2>'+T.plural+'</h2>'+
+      '<div class="listhead"><h2>'+T.plural+'</h2>'+
+        '<button class="btn sm" onclick="removeTracker(\''+t+'\')"><i class="ti ti-trash" style="vertical-align:-2px"></i> Remove tracker</button></div>'+
+      '<p class="dsc-sub">The AI adds matches here. Click a name to open its application page.</p>'+
       '<div class="toolbar">'+
         '<input type="search" id="f_'+t+'_q" placeholder="Search…" oninput="renderList(\''+t+'\')">'+
         cat +
@@ -1103,7 +1199,6 @@ function buildListSections(){
         extra +
         '<select id="f_'+t+'_sort" onchange="renderList(\''+t+'\')">'+sorts+'</select>'+
         '<span class="sub" id="f_'+t+'_count"></span>'+
-        '<button class="btn primary sm" style="margin-left:auto" onclick="openModal(\''+t+'\')">+ Add '+T.label+'</button>'+
       '</div>'+
       '<div class="table-scroll"><table><thead><tr>'+heads.map(h=>'<th>'+h+'</th>').join("")+'</tr></thead><tbody id="f_'+t+'_body"></tbody></table></div>'+
     '</section>';
@@ -1170,12 +1265,15 @@ function getFiltered(t){
 }
 
 function rowCommon(t,s,cells){
-  return '<tr class="rowlink" onclick="openModal(\''+t+'\',\''+s.id+'\')">'+cells+
-    '<td onclick="event.stopPropagation()"><button class="btn sm" onclick="openModal(\''+t+'\',\''+s.id+'\')">Edit</button></td></tr>';
+  return '<tr>'+cells+
+    '<td><button class="btn iconbtn sm" title="Edit" aria-label="Edit" onclick="openModal(\''+t+'\',\''+s.id+'\')"><i class="ti ti-pencil"></i></button></td></tr>';
 }
+// Name is now the apply link: clicking it opens the application page in a new tab.
 function nameCell(t,s,sub){
-  const link = s.url ? ' <a href="'+esc(s.url)+'" target="_blank" rel="noopener" title="Open portal" onclick="event.stopPropagation()">↗</a>' : "";
-  return '<td><div class="sname">'+esc(s.name)+link+'</div><div class="sorg">'+esc(sub||"")+'</div></td>';
+  const nameHtml = s.url
+    ? '<a class="sname applylink" href="'+esc(s.url)+'" target="_blank" rel="noopener" title="Open application page">'+esc(s.name)+' <i class="ti ti-external-link"></i></a>'
+    : '<span class="sname">'+esc(s.name)+'</span>';
+  return '<td><div>'+nameHtml+'</div><div class="sorg">'+esc(sub||"")+'</div></td>';
 }
 function statusCell(t,s){
   return '<td onclick="event.stopPropagation()"><select class="statussel" onchange="quickStatus(\''+t+'\',\''+s.id+'\',this.value)">'+
@@ -1189,8 +1287,8 @@ function renderList(t){
   const rows = getFiltered(t);
   document.getElementById("f_"+t+"_count").textContent = rows.length+" of "+items(t).length;
   const body = document.getElementById("f_"+t+"_body");
-  const colCount = {scholarship:8,internship:9,college:8,job:9}[t];
-  if(!rows.length){ body.innerHTML = '<tr><td colspan="'+colCount+'"><div class="empty">Nothing here yet. Click <b>+ Add '+TR[t].label+'</b> or import a CSV.</div></td></tr>'; return; }
+  const colCount = {scholarship:8,internship:9,research:9,college:8,job:9}[t];
+  if(!rows.length){ body.innerHTML = '<tr><td colspan="'+colCount+'"><div class="empty">No '+TR[t].plural.toLowerCase()+' yet — the AI adds matches here from your Discoveries.</div></td></tr>'; return; }
   body.innerHTML = rows.map(s=>{
     if(t==="scholarship"){
       const reqs = [s.essay?"Essay":"", s.lor?"LOR":""].filter(Boolean).join(" · ") || '<span style="color:#9aa3b8">none</span>';
@@ -1198,6 +1296,11 @@ function renderList(t){
     }
     if(t==="internship"){
       const reqs = [s.cover?"Cover letter":"", s.transcript?"Transcript":"", s.referral?"Referral":""].filter(Boolean).join(" · ") || '<span style="color:#9aa3b8">none</span>';
+      const sub = [s.org,s.location].filter(Boolean).join(" · ");
+      return rowCommon(t,s, nameCell(t,s,sub)+'<td style="white-space:nowrap">'+esc(s.pay||"—")+'</td><td style="white-space:nowrap">'+esc(s.term||"—")+'</td>'+catBadge(s.category)+dlCell(s)+statusCell(t,s)+'<td>'+fitStars(s.fit)+'</td><td class="reqicons">'+reqs+'</td>');
+    }
+    if(t==="research"){
+      const reqs = [s.cover?"Statement":"", s.lor?"LOR":""].filter(Boolean).join(" · ") || '<span style="color:#9aa3b8">none</span>';
       const sub = [s.org,s.location].filter(Boolean).join(" · ");
       return rowCommon(t,s, nameCell(t,s,sub)+'<td style="white-space:nowrap">'+esc(s.pay||"—")+'</td><td style="white-space:nowrap">'+esc(s.term||"—")+'</td>'+catBadge(s.category)+dlCell(s)+statusCell(t,s)+'<td>'+fitStars(s.fit)+'</td><td class="reqicons">'+reqs+'</td>');
     }
@@ -1496,11 +1599,6 @@ function deleteCurrent(){
   data[TR[editingType].arr] = items(editingType).filter(x=>x.id!==editingId);
   save(); closeModal(); renderAll(); toast("Deleted");
 }
-function addDefault(){
-  if(currentTab.startsWith("list-")) openModal(currentTab.slice(5));
-  else openModal(data.mode==="hs" ? "college" : data.mode==="pro" ? "job" : "scholarship");
-}
-
 /* ================= CSV ================= */
 function csvQuote(v){ return '"'+String(v==null?"":v).replace(/"/g,'""')+'"'; }
 function exportType(t){
@@ -1892,8 +1990,6 @@ function renderSettings(){
       '<div class="setrow"><b>Avatar</b><span class="avatar" style="width:36px;height:36px;font-size:16px">'+esc(init)+'</span></div>'+
       '<div class="setrow"><b>Full name</b><input style="max-width:250px" value="'+esc(p.name||"")+'" onchange="setPName(this.value)"></div>'+
       '<div class="setrow"><b>What should Waypoint call you?</b><input style="max-width:250px" value="'+esc(p.nickname||"")+'" onchange="setNick(this.value)"></div>'+
-      '<div class="setrow"><div><b>I am a…</b><div class="sub">Sets which trackers you see</div></div><select style="width:auto" onchange="setRoleType(this.value)">'+
-        [["hs","Highschool student"],["college","College student"],["pro","Professional"]].map(([v,l])=>'<option value="'+v+'"'+(data.mode===v?" selected":"")+'>'+l+'</option>').join("")+'</select></div>'+
       '<h3 style="margin-top:22px">Preferences</h3>'+
       '<div class="setrow"><b>Appearance</b><div class="modeswitch">'+seg+'</div></div>'+
       '<div class="setrow"><b>App font</b><select style="width:auto" onchange="setFont(this.value)">'+
@@ -2155,7 +2251,7 @@ function rfInitDrop(){
 function renderAll(){
   renderBanner();
   renderDashboard();
-  ["scholarship","internship","college","job"].forEach(renderList);
+  modeTrackers().forEach(renderList);
   renderInsights();
   renderProfile();
 }
