@@ -405,33 +405,81 @@ function initCloud(){
       cloudUser = null; data.account = null; save();
     }
   });
+  // keep devices in step: re-check the cloud periodically and when the tab regains focus
+  setInterval(()=>{ if(cloudUser && initialPullDone && document.visibilityState==="visible") pullCloud(); }, 20000);
+  document.addEventListener("visibilitychange", ()=>{
+    if(document.visibilityState==="visible" && cloudUser && initialPullDone) pullCloud();
+  });
+}
+// Merge two lists of items by id. Newer per-item edit (_m) wins; honor tombstones (deletes).
+function mergeList(localArr, remoteArr, tombs){
+  const out = {};
+  (localArr||[]).forEach(it=>{ if(it && it.id) out[it.id] = it; });
+  (remoteArr||[]).forEach(it=>{
+    if(!it || !it.id) return;
+    const cur = out[it.id];
+    if(!cur){ out[it.id] = it; return; }
+    // both have this item — keep whichever was edited later
+    const lm = cur._m||0, rm = it._m||0;
+    out[it.id] = rm > lm ? it : cur;
+  });
+  // drop anything a tombstone says was deleted after it was last edited
+  return Object.values(out).filter(it=>{
+    const t = tombs[it.id];
+    return !(t && t >= (it._m||0));
+  });
+}
+// Merge remote cloud payload into local `data` without losing either side.
+function mergeData(remote){
+  const tombs = Object.assign({}, remote.tombstones||{}, data.tombstones||{});
+  ["scholarships","internships","colleges","jobs"].forEach(k=>{
+    data[k] = mergeList(data[k], remote[k], tombs);
+  });
+  // device registry: union, newest lastUsed wins
+  const dev = Object.assign({}, remote.devices||{});
+  Object.keys(data.devices||{}).forEach(id=>{
+    const a = data.devices[id], b = dev[id];
+    dev[id] = (!b || (a.lastUsed||"") >= (b.lastUsed||"")) ? a : b;
+  });
+  data.devices = dev;
+  data.tombstones = tombs;
+  // scalar settings/profile: take whichever whole payload is newer
+  const remoteNewer = (remote.updatedAt||"") > (data.updatedAt||"");
+  if(remoteNewer){
+    ["mode","theme","lang","font","motion","alarms","sidebar","profile","resume"].forEach(k=>{
+      if(remote[k]!==undefined) data[k] = remote[k];
+    });
+    if(!data.onboarded && remote.onboarded) data.onboarded = true;
+  }
 }
 async function pullCloud(){
   if(!sb || !cloudUser) return;
   try{
     const res = await sb.from("user_data").select("payload,updated_at").eq("user_id", cloudUser).maybeSingle();
     if(res.error){ toast("Cloud sync error — working locally"); return; }
+    const firstPull = !initialPullDone;
     initialPullDone = true;
     const row = res.data;
-    if(row && row.payload && row.payload.scholarships){
-      const remoteT = row.payload.updatedAt || "";
-      const localT = data.updatedAt || "";
-      // adopt the cloud copy if it's newer, OR if this device hasn't been set up yet
-      if(remoteT > localT || !data.onboarded){
-        const keepAccount = data.account;
-        data = fix(row.payload);
-        if(keepAccount) data.account = keepAccount;
-        touchDevice();
-        save(); // persists locally and uploads the merged device list
+    if(row && row.payload){
+      const before = JSON.stringify({s:data.scholarships,i:data.internships,c:data.colleges,j:data.jobs,p:data.profile});
+      const keepAccount = data.account;
+      const remote = fix(row.payload);
+      mergeData(remote);            // <-- combine instead of overwrite
+      if(keepAccount) data.account = keepAccount;
+      touchDevice();
+      const changed = firstPull || JSON.stringify({s:data.scholarships,i:data.internships,c:data.colleges,j:data.jobs,p:data.profile}) !== before;
+      save();                       // persists locally and pushes the merged result back up
+      if(changed && !modalOpen()){  // don't yank the UI out from under an open editor
         applyTheme(); applyPrefs(); applySidebar(); buildNav(); showTab();
         renderAll(); renderResume(); updatePreview();
-        if(data.onboarded) obHide(); // returning user on a new device: skip onboarding entirely
-        lastSyncAt = new Date();
-        toast("Synced from your account");
-        return;
+        if(data.onboarded) obHide(); // returning user on a new device: skip onboarding
+        if(!firstPull) toast("Synced new changes");
       }
+      lastSyncAt = new Date();
+      if(firstPull) toast("Synced from your account");
+      return;
     }
-    pushCloud();
+    pushCloud(); // no cloud row yet — seed it from this device
   }catch(e){ /* offline — local storage still has everything */ }
 }
 async function pushCloud(){
@@ -644,6 +692,7 @@ function fix(d){
   d.onboarded = !!d.onboarded;
   d.account = d.account || null;
   d.devices = d.devices || {};
+  d.tombstones = d.tombstones || {};
   d.deviceId = d.deviceId || (Date.now().toString(36)+Math.random().toString(36).slice(2,10));
   d.createdAt = d.createdAt || new Date().toISOString().slice(0,10);
   d.lastUsed = new Date().toISOString().slice(0,10);
@@ -1186,6 +1235,12 @@ function openModal(type,id){
   if(first) first.focus();
 }
 function closeModal(){ document.getElementById("modalBack").classList.remove("open"); editingId=null; }
+function modalOpen(){
+  return ["modalBack","settingsBack"].some(id=>{
+    const el = document.getElementById(id);
+    return el && el.classList.contains("open");
+  });
+}
 
 function saveItem(){
   const T = TR[editingType];
@@ -1202,9 +1257,9 @@ function saveItem(){
   if(!ok){ toast("Name is required"); return; }
   if(editingId){
     const s = items(editingType).find(x=>x.id===editingId);
-    Object.assign(s,obj); delete s.sample;
+    Object.assign(s,obj); delete s.sample; s._m = Date.now();
   } else {
-    obj.id = uid();
+    obj.id = uid(); obj._m = Date.now();
     items(editingType).push(obj);
   }
   save(); closeModal(); renderAll(); toast("Saved ✓");
@@ -1212,6 +1267,9 @@ function saveItem(){
 function deleteCurrent(){
   if(!editingId) return;
   if(!confirm("Delete this item?")) return;
+  // tombstone so the delete propagates across devices instead of being resurrected on merge
+  data.tombstones = data.tombstones || {};
+  data.tombstones[editingId] = Date.now();
   data[TR[editingType].arr] = items(editingType).filter(x=>x.id!==editingId);
   save(); closeModal(); renderAll(); toast("Deleted");
 }
