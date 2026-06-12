@@ -133,14 +133,28 @@
   .sbtn .nicon{font-size:18px;width:20px;display:inline-flex;justify-content:center;flex-shrink:0}
   .sbtn:hover{background:var(--card2);color:var(--ink)}
   .sbtn.active{background:var(--brand-soft);color:var(--brand);font-weight:700}
-  .addtr{margin-top:4px}
-  .addtr>summary{list-style:none;color:var(--muted)}
-  .addtr>summary::-webkit-details-marker{display:none}
-  .addtr[open]>summary{color:var(--brand)}
-  .addtr-menu{padding:4px 0 4px 8px}
-  .addtr-opt{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:none;border:none;padding:8px 12px;border-radius:10px;font-size:13.5px;font-weight:600;color:var(--muted);cursor:pointer}
-  .addtr-opt:hover{background:var(--card2);color:var(--brand)}
-  .addtr-opt .nicon{font-size:16px;width:18px;display:inline-flex;justify-content:center}
+  .sect{margin-bottom:8px}
+  .secthead{display:flex;align-items:center;gap:6px;width:100%;background:none;border:none;cursor:pointer;padding:8px 10px 4px;font-size:10.5px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;color:var(--muted);opacity:.8}
+  .secthead i{font-size:14px}
+  .secthead:hover{color:var(--ink)}
+  .sect.collapsed .sectbody{display:none}
+  .addtrk{color:var(--brand)}
+  .addtrk .nicon i{font-size:17px}
+  .profmenu{display:none;position:absolute;left:10px;right:10px;bottom:54px;background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 8px 30px rgba(20,20,30,.18);padding:6px;z-index:90}
+  .profmenu.open{display:block}
+  .pm-email{font-size:12px;color:var(--muted);padding:8px 12px 6px;word-break:break-all}
+  .pm-item{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:none;border:none;padding:9px 12px;border-radius:9px;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer}
+  .pm-item i{font-size:17px;width:19px;display:inline-flex;justify-content:center;color:var(--muted)}
+  .pm-item:hover{background:var(--card2)}
+  .pm-item[disabled]{opacity:.4;cursor:not-allowed}
+  .pm-sep{height:1px;background:var(--line);margin:5px 8px}
+  .pbtn{position:relative}
+  .addtr-card{display:flex;align-items:center;gap:13px;width:100%;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer}
+  .addtr-card:hover{border-color:var(--brand);background:var(--brand-soft)}
+  .addtr-ic{width:40px;height:40px;border-radius:11px;background:var(--brand-soft);color:var(--brand);display:inline-flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+  .addtr-txt{display:flex;flex-direction:column}
+  .addtr-txt b{font-size:14.5px}
+  .addtr-txt span{font-size:12.5px;color:var(--muted)}
   #scrim{display:none;position:fixed;inset:0;background:rgba(10,15,30,.4);z-index:55}
 
   main{max-width:1180px;margin:0 20px 0 246px;padding:26px 10px 80px;transition:margin .2s}
@@ -206,10 +220,13 @@
   .statrow{margin-bottom:11px}
   .statrow .lblrow{display:flex;justify-content:space-between;font-size:13px}
 
-  .modal-back{position:fixed;inset:0;background:rgba(15,20,40,.45);display:none;z-index:100;overflow-y:auto;padding:30px 14px}
-  .modal-back.open{display:block}
-  .modal{background:var(--card);border-radius:14px;max-width:700px;margin:0 auto;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+  .modal-back{position:fixed;inset:0;background:rgba(15,18,30,.5);backdrop-filter:blur(2px);display:none;z-index:100;overflow-y:auto;padding:30px 14px}
+  .modal-back.open{display:flex;align-items:center;justify-content:center;animation:fadeBack .18s ease}
+  @keyframes fadeBack{from{opacity:0}to{opacity:1}}
+  .modal{background:var(--card);border-radius:18px;max-width:700px;width:100%;margin:auto;padding:24px;box-shadow:0 24px 70px rgba(0,0,0,.3);animation:popModal .2s cubic-bezier(.2,.8,.3,1)}
+  @keyframes popModal{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
   .modal h2{margin-bottom:16px}
+  body.reduced .modal-back.open,body.reduced .modal{animation:none}
   .frow{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
   .frow.single{grid-template-columns:1fr}
   .frow label,.flabel{display:block;font-size:12.5px;font-weight:700;color:var(--muted);margin-bottom:4px}
@@ -279,20 +296,28 @@
 </header>
 
 <div id="sidebar">
-  <div class="snav">
-    <div class="slabel" style="margin-top:0">Navigate</div>
-    <div id="mainNav"></div>
-    <div id="addTrackerWrap"></div>
-  </div>
+  <div class="snav" id="snav"></div>
   <div class="sfoot">
-    <button class="sbtn" onclick="openSettings('help')"><span class="nicon"><i class="ti ti-help-circle"></i></span>Help</button>
-    <button class="sbtn" onclick="openSettings('general')"><span class="nicon"><i class="ti ti-settings"></i></span>Settings</button>
-    <button class="sbtn pbtn" onclick="openSettings('general')"><span class="avatar" id="avatarDot">🙂</span><span id="profileName">Set up your profile</span></button>
+    <button class="sbtn pbtn" id="profileChip" onclick="toggleProfileMenu(event)">
+      <span class="avatar" id="avatarDot">🙂</span>
+      <span id="profileName">Set up your profile</span>
+      <i class="ti ti-dots" style="margin-left:auto;font-size:16px;opacity:.6"></i>
+    </button>
+    <div id="profileMenu" class="profmenu"></div>
   </div>
 </div>
 <div id="scrim" onclick="toggleSidebar()"></div>
 
 <div id="onboard"><div class="obcard" id="obCard"></div></div>
+
+<div class="modal-back" id="addTrackerBack" onclick="if(event.target===this)closeAddTracker()">
+  <div class="modal" style="max-width:460px">
+    <h2 style="margin-bottom:4px">Add a tracker</h2>
+    <p class="sub" style="margin-bottom:16px">Pick what you want Waypoint to track. The AI fills it with matches.</p>
+    <div id="addTrackerOpts"></div>
+    <div class="macts"><div></div><div class="right"><button class="btn" onclick="closeAddTracker()">Cancel</button></div></div>
+  </div>
+</div>
 
 <div class="modal-back" id="settingsBack" onclick="if(event.target===this)closeSettings()">
   <div class="modal settings-modal">
@@ -942,12 +967,16 @@ function fix(d){
   d.createdAt = d.createdAt || new Date().toISOString().slice(0,10);
   d.lastUsed = new Date().toISOString().slice(0,10);
   d.scholarships = d.scholarships||[]; d.internships = d.internships||[]; d.colleges = d.colleges||[]; d.jobs = d.jobs||[]; d.research = d.research||[];
-  if(!Array.isArray(d.trackers) || !d.trackers.length){
-    if(d.mode==="hs") d.trackers = ["college","scholarship"];
-    else if(d.mode==="pro") d.trackers = ["job"];
-    else d.trackers = ["scholarship","internship"];
+  // Seed trackers once from the old mode for accounts that predate the tracker list.
+  if(!d.trackersInit){
+    if(!Array.isArray(d.trackers) || !d.trackers.length){
+      if(d.mode==="hs") d.trackers = ["college","scholarship"];
+      else if(d.mode==="pro") d.trackers = ["job"];
+      else d.trackers = ["scholarship","internship"];
+    }
+    d.trackersInit = true;
   }
-  d.trackers = d.trackers.filter(t=>["scholarship","internship","research","college","job"].includes(t));
+  d.trackers = (d.trackers||[]).filter(t=>["scholarship","internship","research","college","job"].includes(t));
   d.profile = d.profile||{};
   if(!d.resume || !d.resume.header){
     d.resume = {header:{name:"",phone:"",email:"",linkedin:"",github:""},education:[],experience:[],projects:[],skills:{languages:"",frameworks:"",tools:"",libraries:""}};
@@ -982,23 +1011,79 @@ function save(){
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 const ALL_TRACKERS = ["scholarship","internship","research","college","job"];
 // The user's active trackers. Single source of truth for which tabs show.
+// Once trackersInit is true, an empty list stays empty (no re-seeding).
 function modeTrackers(){
-  if(Array.isArray(data.trackers) && data.trackers.length) return data.trackers.filter(t=>TR[t]);
-  // first run / legacy: seed from the old mode, then persist
+  if(data.trackersInit){ return (data.trackers||[]).filter(t=>TR[t]); }
+  // first run / legacy: seed from the old mode, then persist + lock
   let seed;
   if(data.mode==="hs") seed = ["college","scholarship"];
   else if(data.mode==="pro") seed = ["job"];
   else seed = ["scholarship","internship"];
   data.trackers = seed.slice();
+  data.trackersInit = true;
   return data.trackers;
 }
 function hasTracker(t){ return modeTrackers().includes(t); }
 function addTracker(t){
   if(!TR[t] || hasTracker(t)) return;
   data.trackers = modeTrackers().concat([t]);
-  save(); buildNav(); switchView("list-"+t);
+  data.trackersInit = true;
+  save(); buildNav(); closeAddTracker(); switchView("list-"+t);
   toast(TR[t].plural+" tracker added");
 }
+function openAddTracker(){
+  const avail = TRACKER_ORDER.filter(t=>TR[t] && !hasTracker(t));
+  const blurbs = {
+    scholarship:"Awards and grants you qualify for",
+    internship:"Internship roles matched to you",
+    research:"REUs, labs, and research programs",
+    job:"Full-time and part-time roles",
+    college:"College applications and deadlines"
+  };
+  document.getElementById("addTrackerOpts").innerHTML = avail.map(t=>
+    '<button class="addtr-card" onclick="addTracker(\''+t+'\')">'+
+      '<span class="addtr-ic"><i class="ti '+(NAV_ICONS["list-"+t]||"ti-plus")+'"></i></span>'+
+      '<span class="addtr-txt"><b>'+TR[t].plural+'</b><span>'+(blurbs[t]||"")+'</span></span>'+
+      '<i class="ti ti-chevron-right" style="margin-left:auto;opacity:.5"></i>'+
+    '</button>'
+  ).join("") || '<div class="empty">You already have every tracker.</div>';
+  document.getElementById("addTrackerBack").classList.add("open");
+}
+function closeAddTracker(){ document.getElementById("addTrackerBack").classList.remove("open"); }
+function toggleProfileMenu(e){
+  if(e) e.stopPropagation();
+  const m = document.getElementById("profileMenu");
+  if(m.classList.contains("open")){ m.classList.remove("open"); return; }
+  buildProfileMenu();
+  m.classList.add("open");
+}
+function buildProfileMenu(){
+  const m = document.getElementById("profileMenu");
+  const email = (data.account && data.account.email) || "";
+  const signedIn = !!(data.account && cloudUser);
+  m.innerHTML =
+    (email ? '<div class="pm-email">'+esc(email)+'</div>' : '<div class="pm-email">Not signed in</div>')+
+    '<button class="pm-item" onclick="pmGo(\'settings\')"><i class="ti ti-settings"></i>Settings</button>'+
+    '<button class="pm-item" onclick="pmGo(\'stats\')"><i class="ti ti-chart-bar"></i>Stats</button>'+
+    '<button class="pm-item" onclick="pmGo(\'help\')"><i class="ti ti-help-circle"></i>Help</button>'+
+    '<button class="pm-item" onclick="pmGo(\'language\')"><i class="ti ti-language"></i>Language</button>'+
+    '<button class="pm-item" onclick="pmGo(\'upgrade\')"><i class="ti ti-sparkles"></i>Upgrade plan</button>'+
+    '<div class="pm-sep"></div>'+
+    '<button class="pm-item" onclick="pmGo(\'logout\')"'+(signedIn?"":' disabled')+'><i class="ti ti-logout"></i>Log out</button>';
+}
+function pmGo(action){
+  document.getElementById("profileMenu").classList.remove("open");
+  if(action==="settings") openSettings("general");
+  else if(action==="stats") switchView("insights");
+  else if(action==="help") openSettings("help");
+  else if(action==="language") openSettings("general");
+  else if(action==="upgrade") openSettings("billing");
+  else if(action==="logout") obLogout();
+}
+document.addEventListener("click",e=>{
+  const m=document.getElementById("profileMenu"), chip=document.getElementById("profileChip");
+  if(m && m.classList.contains("open") && !m.contains(e.target) && chip && !chip.contains(e.target)) m.classList.remove("open");
+});
 function removeTracker(t){
   if(!hasTracker(t)) return;
   const n = items(t).length;
@@ -1110,28 +1195,40 @@ const NAV_ICONS = {
   "list-college":"ti-building-bank", "list-job":"ti-id-badge",
   insights:"ti-chart-bar", profile:"ti-user-circle", resume:"ti-file-text"
 };
-function buildNav(){
-  document.getElementById("mainNav").innerHTML = navTabs().map(([id,lbl])=>{
-    const ic = NAV_ICONS[id] || "ti-point";
-    return '<button class="sbtn'+(currentTab===id?' active':'')+'" onclick="switchView(\''+id+'\')">'+
-      '<span class="nicon"><i class="ti '+ic+'"></i></span>'+lbl+'</button>';
-  }).join("");
-  buildAddTracker();
-}
 const TRACKER_ORDER = ["scholarship","internship","research","job","college"];
-function buildAddTracker(){
-  const wrap = document.getElementById("addTrackerWrap");
-  if(!wrap) return;
+// section collapse state (persisted in localStorage, not synced)
+function secCollapsed(key){ try{ return localStorage.getItem("wpSec_"+key)==="1"; }catch(e){ return false; } }
+function toggleSection(key){
+  try{ localStorage.setItem("wpSec_"+key, secCollapsed(key)?"0":"1"); }catch(e){}
+  buildNav();
+}
+function navBtn(id,lbl){
+  const ic = NAV_ICONS[id] || "ti-point";
+  return '<button class="sbtn'+(currentTab===id?' active':'')+'" onclick="switchView(\''+id+'\')">'+
+    '<span class="nicon"><i class="ti '+ic+'"></i></span>'+lbl+'</button>';
+}
+function sectionHtml(key, label, bodyHtml){
+  const col = secCollapsed(key);
+  const head = label
+    ? '<button class="secthead" onclick="toggleSection(\''+key+'\')"><i class="ti ti-chevron-'+(col?"right":"down")+'"></i><span>'+label+'</span></button>'
+    : '';
+  return '<div class="sect'+(col&&label?" collapsed":"")+'">'+head+'<div class="sectbody">'+bodyHtml+'</div></div>';
+}
+function buildNav(){
+  const snav = document.getElementById("snav");
+  if(!snav) return;
+  // top section: Discoveries, Dashboard, Resume Refiner
+  const top = [["discover","Discoveries"],["dashboard","Dashboard"],["resume","Resume Refiner"]]
+    .map(([id,l])=>navBtn(id,l)).join("");
+  // trackers section: active trackers + add tracker
+  const active = modeTrackers().map(t=>navBtn("list-"+t, TR[t].plural)).join("");
   const avail = TRACKER_ORDER.filter(t=>TR[t] && !hasTracker(t));
-  if(!avail.length){ wrap.innerHTML = ""; return; }
-  const opts = avail.map(t=>
-    '<button class="addtr-opt" onclick="addTracker(\''+t+'\')"><span class="nicon"><i class="ti '+(NAV_ICONS["list-"+t]||"ti-plus")+'"></i></span>'+TR[t].plural+'</button>'
-  ).join("");
-  wrap.innerHTML =
-    '<details class="addtr">'+
-      '<summary class="sbtn"><span class="nicon"><i class="ti ti-plus"></i></span>Add tracker</summary>'+
-      '<div class="addtr-menu">'+opts+'</div>'+
-    '</details>';
+  const addBtn = avail.length
+    ? '<button class="sbtn addtrk" onclick="openAddTracker()"><span class="nicon"><i class="ti ti-plus"></i></span>Add tracker</button>'
+    : '';
+  snav.innerHTML =
+    sectionHtml("top", "", top) +
+    sectionHtml("trackers", "Trackers", active + addBtn);
 }
 function applySidebar(){
   document.body.classList.toggle("sbhidden", data.sidebar==="hidden");
