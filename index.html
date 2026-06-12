@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Waypoint — Scholarship, Internship & College App Tracker</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{
     --bg:#f3f5fa; --card:#ffffff; --card2:#f8fafd; --field:#ffffff; --ink:#16203a; --muted:#5e6a87;
@@ -364,6 +365,53 @@
 
 <script>
 "use strict";
+
+/* ============================================================
+   CLOUD CONFIG — paste your keys between the quotes below.
+   1. SUPABASE_URL + SUPABASE_ANON_KEY: supabase.com → your project
+      → Settings → API. (The anon key is safe to publish.)
+   2. GA_MEASUREMENT_ID: analytics.google.com → Admin → Data streams
+      → your stream → Measurement ID (looks like "G-XXXXXXXXXX").
+   Leave these as-is and the app runs in local-only preview mode.
+   ============================================================ */
+const SUPABASE_URL = "https://zseijpzdskmhobolcwjf.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_eJV16JcqX13FOfh0RIA-Cw__5fh7GiJ";
+const GA_MEASUREMENT_ID = "G-KW7CVG32M0";
+
+let sb = null;
+function cloudReady(){ return SUPABASE_URL.indexOf("https://")===0 && SUPABASE_ANON_KEY.length>30; }
+function initCloud(){
+  if(!cloudReady() || !window.supabase) return;
+  sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  sb.auth.onAuthStateChange((event, session)=>{
+    if(session && session.user){
+      const u = session.user;
+      data.account = {
+        method: (u.app_metadata && u.app_metadata.provider) || "email",
+        email: u.email || "",
+        name: (u.user_metadata && (u.user_metadata.full_name || u.user_metadata.name)) || ""
+      };
+      if(data.account.name && !data.profile.name) data.profile.name = data.account.name;
+      save(); renderProfile();
+      if(!data.onboarded && obFlowSteps()[obI]==="auth"){ obI = 1; obRender(); }
+      const sBack = document.getElementById("settingsBack");
+      if(sBack && sBack.classList.contains("open")) renderSettings();
+    } else if(event==="SIGNED_OUT"){
+      data.account = null; save();
+    }
+  });
+}
+function initGA(){
+  if(!GA_MEASUREMENT_ID) return;
+  const s = document.createElement("script");
+  s.src = "https://www.googletagmanager.com/gtag/js?id="+GA_MEASUREMENT_ID;
+  s.async = true;
+  document.head.appendChild(s);
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function(){ window.dataLayer.push(arguments); };
+  window.gtag("js", new Date());
+  window.gtag("config", GA_MEASUREMENT_ID);
+}
 
 /* ================= config ================= */
 const STATUS_COLORS = {
@@ -1340,14 +1388,27 @@ function obToggleGoal(g){
   obRender();
 }
 function obAuth(method){
+  if(sb){
+    sb.auth.signInWithOAuth({provider:"google", options:{redirectTo: window.location.href.split("#")[0]}});
+    return; // page redirects to Google; onAuthStateChange resumes onboarding on return
+  }
   data.account = {method:"google", name:"", email:"Google account"};
   save(); obI++; obRender();
 }
 function obAuthEmail(){
   const n=obG("ob_name"), e=obG("ob_email");
   if(!/.+@.+\..+/.test(e)){ toast("Enter a valid email"); return; }
+  obA.name = n;
+  if(sb){
+    sb.auth.signInWithOtp({email:e, options:{emailRedirectTo: window.location.href.split("#")[0], data:{full_name:n}}})
+      .then(res=>{
+        if(res.error){ toast(res.error.message||"Couldn't send the sign-in link"); return; }
+        obA.linkSent = e; obRender();
+      });
+    return;
+  }
   data.account = {method:"email", name:n, email:e};
-  obA.name = n; save(); obI++; obRender();
+  save(); obI++; obRender();
 }
 function obSkipAuth(){ obI++; obRender(); }
 function obCollect(){
@@ -1400,14 +1461,24 @@ function obRender(){
 
   if(s==="auth"){
     nav=false;
-    h='<div style="text-align:center"><div class="logo" style="justify-content:center;font-size:22px;margin-bottom:6px"><span>🧭</span> Waypoint</div>'+
-      '<p class="sub" style="margin-bottom:20px">Scholarships, internships, college apps, and jobs —<br>tracked in one place, with AI doing the heavy lifting.</p></div>'+
-      '<button class="obchoice" style="text-align:center" onclick="obAuth(\'google\')">Continue with Google</button>'+
-      '<div class="sub" style="text-align:center;margin:10px 0">or create an account with email</div>'+
-      '<div class="pgrid"><div><span class="flabel">Name</span><input id="ob_name"></div><div><span class="flabel">Email</span><input id="ob_email" type="email"></div></div>'+
-      '<button class="btn primary" style="width:100%" onclick="obAuthEmail()">Create account</button>'+
-      '<div style="text-align:center;margin-top:10px"><button class="sbtn" style="width:auto;display:inline-block" onclick="obSkipAuth()">Skip for now</button></div>'+
-      '<div class="hint" style="text-align:center;margin-top:10px">Preview build — your account is stored on this device only.</div>';
+    if(obA.linkSent){
+      h='<div style="text-align:center"><div class="logo" style="justify-content:center;font-size:22px;margin-bottom:6px"><span>🧭</span> Waypoint</div>'+
+        '<h2 style="margin-bottom:10px">Check your email</h2>'+
+        '<p class="sub" style="margin-bottom:16px">We sent a sign-in link to <b>'+esc(obA.linkSent)+'</b>.<br>Open it on this device to continue — it can take a minute, and check spam.</p>'+
+        '<button class="sbtn" style="width:auto;display:inline-block" onclick="obA.linkSent=null;obRender()">Use a different email</button></div>';
+    } else {
+      const note = cloudReady()
+        ? 'Secure sign-in — no password to remember; the email link does it.'
+        : 'Preview build — your account is stored on this device only.';
+      h='<div style="text-align:center"><div class="logo" style="justify-content:center;font-size:22px;margin-bottom:6px"><span>🧭</span> Waypoint</div>'+
+        '<p class="sub" style="margin-bottom:20px">Scholarships, internships, college apps, and jobs —<br>tracked in one place, with AI doing the heavy lifting.</p></div>'+
+        '<button class="obchoice" style="text-align:center" onclick="obAuth(\'google\')">Continue with Google</button>'+
+        '<div class="sub" style="text-align:center;margin:10px 0">or '+(cloudReady()?'sign in with an email link':'create an account with email')+'</div>'+
+        '<div class="pgrid"><div><span class="flabel">Name</span><input id="ob_name"></div><div><span class="flabel">Email</span><input id="ob_email" type="email"></div></div>'+
+        '<button class="btn primary" style="width:100%" onclick="obAuthEmail()">'+(cloudReady()?'Send sign-in link':'Create account')+'</button>'+
+        '<div style="text-align:center;margin-top:10px"><button class="sbtn" style="width:auto;display:inline-block" onclick="obSkipAuth()">Skip for now</button></div>'+
+        '<div class="hint" style="text-align:center;margin-top:10px">'+note+'</div>';
+    }
   }
   if(s==="age"){
     h='<h2>How old are you?</h2><p class="sub" style="margin-bottom:14px">Some opportunities have age requirements — this helps filter them.</p>'+
@@ -1629,7 +1700,8 @@ function importBackup(ev){
 }
 function obLogout(){
   if(!confirm("Log out? Your data stays on this device.")) return;
-  data.account=null; data.onboarded=false; save(); location.reload();
+  const fin = ()=>{ data.account=null; data.onboarded=false; save(); location.reload(); };
+  if(sb){ sb.auth.signOut().then(fin, fin); } else fin();
 }
 function deleteAllData(){
   if(!confirm("Delete ALL Waypoint data on this device? This cannot be undone.")) return;
@@ -2001,6 +2073,8 @@ document.addEventListener("keydown",e=>{ if(e.key==="Escape"){ closeModal(); clo
 if(window.matchMedia){
   window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{ if(data.theme==="system"){ applyTheme(); renderAll(); } });
 }
+initCloud();
+initGA();
 buildListSections();
 buildNav();
 applyTheme();
