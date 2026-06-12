@@ -91,6 +91,11 @@
   .dsc-emptyic{font-size:44px;margin-bottom:8px}
   .dsc-empty h3{color:var(--ink);margin:6px 0}
   .dsc-empty p{max-width:440px;margin:0 auto 16px;line-height:1.5}
+  .dsc-profile{margin-top:22px;border-top:1px solid var(--line);padding-top:18px}
+  .dsc-profile>summary{cursor:pointer;font-weight:700;font-size:14.5px;display:flex;align-items:center;gap:8px;list-style:none;color:var(--ink)}
+  .dsc-profile>summary::-webkit-details-marker{display:none}
+  .dsc-profile>summary i{font-size:18px;color:var(--brand)}
+  .dsc-prohint{font-weight:500;color:var(--muted);font-size:13px}
   #sidebar{position:fixed;top:64px;left:14px;bottom:14px;width:212px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:14px 10px 10px;z-index:60;transition:transform .2s;display:flex;flex-direction:column;box-shadow:var(--shadow)}
   .snav{flex:1;overflow-y:auto}
   .sfoot{border-top:1px solid var(--line);padding-top:8px;margin-top:8px}
@@ -240,7 +245,6 @@
     <button class="btn iconbtn" onclick="toggleSidebar()" title="Show/hide menu"><i class="ti ti-menu-2"></i></button>
     <div class="logo"><span><i class="ti ti-compass"></i></span> Waypoint</div>
     <div class="hacts">
-      <button class="btn primary" onclick="addDefault()"><i class="ti ti-plus" style="vertical-align:-1px"></i> Add</button>
       <input type="file" id="csvfile" accept=".csv" style="display:none" onchange="importCSV(event)">
     </div>
   </div>
@@ -308,25 +312,18 @@
 
   <section id="view-discover" class="view">
     <h2>Discoveries <span class="dsc-beta">AI</span></h2>
-    <p class="dsc-sub">Opportunities our AI found matched to your profile. Accept the ones you like — they go straight into your trackers.</p>
+    <p class="dsc-sub">Our AI searches the web for opportunities matched to you and drops them here every week. Accept the ones you like — they go straight into your trackers.</p>
     <div id="dscHud"></div>
     <div id="dscTabs" class="dsc-tabbar"></div>
     <div id="dscFeed"></div>
-  </section>
 
-  <section id="view-insights" class="view">
-    <h2>Insights</h2>
-    <div class="grid2" id="insightsWrap"></div>
-  </section>
-
-  <section id="view-profile" class="view">
-    <h2>My Profile & Discovery</h2>
-    <div class="grid2">
-      <div class="panel">
-        <h3>Your discovery profile</h3>
-        <p class="sub" style="margin-bottom:12px">Powers eligibility matching and discovery briefs. Stored only on this device. The more you fill in, the more targeted your results get.</p>
+    <details class="dsc-profile" id="dscProfile">
+      <summary><i class="ti ti-user-circle"></i> Tell the AI about you <span class="dsc-prohint">— the more it knows, the better your matches</span></summary>
+      <div class="panel" style="margin-top:12px">
+        <p class="sub" style="margin-bottom:12px">This is what our AI uses to find opportunities you actually qualify for. Synced to your account.</p>
         <div class="pgrid">
           <div><span class="flabel">Name</span><input id="p_name"></div>
+          <div><span class="flabel">School</span><input id="p_school" placeholder="e.g., Penn State University Park"></div>
           <div><span class="flabel">Major(s) / Intended major</span><input id="p_majors" placeholder="e.g., Biomedical Engineering"></div>
           <div><span class="flabel">GPA</span><input id="p_gpa" placeholder="e.g., 3.7"></div>
           <div><span class="flabel">Graduation year</span><input id="p_gradYear" placeholder="e.g., 2028"></div>
@@ -343,22 +340,15 @@
           <div><span class="flabel">Skills</span><input id="p_skills" placeholder="e.g., SQL, Six Sigma, CAD…"></div>
           <div><span class="flabel">Certifications</span><input id="p_certs" placeholder="e.g., PMP, PE license, AWS…"></div>
         </div>
-        <div style="margin-bottom:12px"><span class="flabel">Interests / keywords</span><textarea id="p_interests" rows="2" placeholder="research, medical devices, robotics, community service…"></textarea></div>
-        <button class="btn primary" onclick="saveProfile();renderProfile();">Save Profile</button>
+        <div style="margin-bottom:12px"><span class="flabel">Goals &amp; interests</span><textarea id="p_interests" rows="2" placeholder="research, medical devices, robotics, paid internships, relocation OK…"></textarea></div>
+        <button class="btn primary" onclick="saveProfile();renderProfile();">Save</button>
       </div>
-      <div class="panel">
-        <h3>Discover new opportunities</h3>
-        <p class="sub">Waypoint builds a personalized search brief from your profile and your existing tracker (so you never get duplicates). Use it with any AI that can search the web — the reply imports straight back in as a CSV.</p>
-        <ol class="steps">
-          <li>Click a button below — the brief is copied to your clipboard.</li>
-          <li>Paste it into Claude (or any AI with web search) and run it.</li>
-          <li>Save the reply as a <b>.csv</b> file.</li>
-          <li>Click <b>Import CSV</b> in the sidebar — new matches appear in your tracker.</li>
-        </ol>
-        <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap" id="briefButtons"></div>
-        <div class="brief-box" id="briefPreview" style="display:none"></div>
-      </div>
-    </div>
+    </details>
+  </section>
+
+  <section id="view-insights" class="view">
+    <h2>Insights</h2>
+    <div class="grid2" id="insightsWrap"></div>
   </section>
 
   <section id="view-resume" class="view">
@@ -1038,10 +1028,9 @@ function downloadFile(name, content, type){
 
 /* ================= nav & mode ================= */
 function navTabs(){
-  const tabs = [["dashboard","Dashboard"]];
+  const tabs = [["discover","Discoveries"],["dashboard","Dashboard"]];
   modeTrackers().forEach(t=>tabs.push(["list-"+t, TR[t].plural]));
-  tabs.push(["discover","Discoveries"]);
-  tabs.push(["insights","Insights"],["profile","Profile & Discovery"],["resume","Resume Check"]);
+  tabs.push(["insights","Insights"],["resume","Resume Check"]);
   return tabs;
 }
 const NAV_ICONS = {
@@ -1072,7 +1061,7 @@ function setMode(m){
 }
 function switchView(v){
   currentTab = v; buildNav(); showTab(); renderAll();
-  if(v==="discover") loadDiscoveries();
+  if(v==="discover"){ loadDiscoveries(); renderProfile(); }
   if(window.innerWidth<=820 && data.sidebar!=="hidden"){ data.sidebar="hidden"; save(); applySidebar(); }
 }
 function showTab(){
@@ -1660,7 +1649,7 @@ function exportICS(){
 }
 
 /* ================= profile & discovery ================= */
-const PROFILE_KEYS = ["name","majors","gpa","gradYear","memberships","citizenship","location","demographics","interests","role","experience","skills","certs"];
+const PROFILE_KEYS = ["name","school","majors","gpa","gradYear","memberships","citizenship","location","demographics","interests","role","experience","skills","certs"];
 function renderProfile(){
   const p = data.profile;
   PROFILE_KEYS.forEach(k=>{
@@ -1672,23 +1661,6 @@ function renderProfile(){
   const display = (p.nickname && p.nickname.trim()) || (p.name ? p.name.trim().split(/\s+/)[0] : "");
   if(dot) dot.textContent = display ? display.charAt(0).toUpperCase() : "?";
   if(nm) nm.textContent = display || "Set up your profile";
-  // summary on discovery page
-  const sum = document.getElementById("profileSummary");
-  if(sum){
-    const rows = [["Major",p.majors],["GPA",p.gpa],["Grad year",p.gradYear],["Memberships",p.memberships],["Citizenship",p.citizenship],["Location",p.location],["Background",p.demographics],["Role",p.role],["Experience",p.experience?p.experience+" yrs":""],["Skills",p.skills],["Certifications",p.certs],["Interests",p.interests]]
-      .filter(([,v])=>v);
-    sum.innerHTML = rows.length
-      ? rows.map(([l,v])=>'<div class="dlitem"><span class="sub">'+l+'</span><span style="font-weight:600;text-align:right">'+esc(v)+'</span></div>').join("")
-      : '<div class="empty">No profile yet. The more you fill in, the more targeted your discovery results get.</div>';
-  }
-  const btns = [];
-  if(data.mode==="pro"){
-    btns.push('<button class="btn primary" onclick="copyBrief(\'job\')">Copy Job Search Brief</button>');
-  } else {
-    btns.push('<button class="btn primary" onclick="copyBrief(\'scholarship\')">Copy Scholarship Brief</button>');
-    if(data.mode==="college") btns.push('<button class="btn primary" onclick="copyBrief(\'internship\')">Copy Internship Brief</button>');
-  }
-  document.getElementById("briefButtons").innerHTML = btns.join("");
 }
 function saveProfile(){
   PROFILE_KEYS.forEach(k=>{
@@ -1697,57 +1669,6 @@ function saveProfile(){
   });
   save(); toast("Profile saved ✓");
 }
-function buildBrief(t){
-  saveProfile();
-  const p = data.profile;
-  const T = TR[t];
-  const level = data.mode==="hs" ? "high school student" : data.mode==="pro" ? "working professional" : "college student";
-  const lines = [];
-  lines.push("You are helping me find new "+T.plural.toLowerCase()+" I qualify for. Search the web for CURRENT, real opportunities with deadlines that have not passed (today is "+new Date().toISOString().slice(0,10)+").");
-  lines.push("");
-  lines.push("MY PROFILE:");
-  lines.push("- Level: "+level+(p.gradYear?", graduating "+p.gradYear:""));
-  if(p.majors) lines.push("- Major / intended major: "+p.majors);
-  if(p.gpa) lines.push("- GPA: "+p.gpa);
-  if(p.memberships) lines.push("- Memberships/orgs: "+p.memberships);
-  if(p.citizenship) lines.push("- Citizenship/residency: "+p.citizenship);
-  if(p.location) lines.push("- Location: "+p.location);
-  if(p.demographics) lines.push("- Background: "+p.demographics);
-  if(p.interests) lines.push("- Interests: "+p.interests);
-  if(p.role) lines.push("- Current/target role: "+p.role);
-  if(p.experience) lines.push("- Years of experience: "+p.experience);
-  if(p.skills) lines.push("- Skills: "+p.skills);
-  if(p.certs) lines.push("- Certifications: "+p.certs);
-  if(p.age) lines.push("- Age: "+p.age);
-  if(p.school) lines.push("- School: "+p.school+(p.year?" ("+p.year+")":""));
-  if(p.goals) lines.push("- Goals: "+p.goals);
-  if(p.employed) lines.push("- Employment status: "+p.employed);
-  lines.push("");
-  lines.push("Prioritize NICHE opportunities that match my specific profile (memberships, background, location, major) over famous national ones — those are where my odds are best.");
-  const names = items(t).map(s=>s.name).filter(Boolean);
-  if(names.length){
-    lines.push("");
-    lines.push("ALREADY IN MY TRACKER — EXCLUDE ALL OF THESE:");
-    lines.push(names.join("; "));
-  }
-  lines.push("");
-  lines.push("Find 10-15 new matches. Verify each has a real, working application page. Respond with ONLY a CSV code block (no other text) using EXACTLY these headers:");
-  lines.push(T.csv.map(c=>c[0]).join(","));
-  lines.push("");
-  lines.push('For Status use "'+T.statuses[0]+'". For yes/no columns use Yes or No. Dates as YYYY-MM-DD. Leave unknown fields empty. For Fit Rating, rate 1-5 how well each matches my profile.');
-  return lines.join("\n");
-}
-function copyBrief(t){
-  const brief = buildBrief(t);
-  const show = ()=>{
-    const pv = document.getElementById("briefPreview");
-    pv.style.display="block"; pv.textContent = brief;
-  };
-  if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(brief).then(()=>{ toast("Brief copied — paste it into Claude or any AI with web search"); show(); },()=>{ show(); toast("Copy blocked — select the text below and copy manually"); });
-  } else { show(); toast("Select the text below and copy it"); }
-}
-
 /* ================= onboarding ================= */
 let obI = 0, obA = {goals:[]};
 function obFlowSteps(){
