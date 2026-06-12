@@ -421,7 +421,8 @@ async function pullCloud(){
         const keepAccount = data.account;
         data = fix(row.payload);
         if(keepAccount) data.account = keepAccount;
-        localStorage.setItem(LS_KEY, JSON.stringify(data));
+        touchDevice();
+        save(); // persists locally and uploads the merged device list
         applyTheme(); applyPrefs(); applySidebar(); buildNav(); showTab();
         renderAll(); renderResume(); updatePreview();
         if(data.onboarded) obHide(); // returning user on a new device: skip onboarding entirely
@@ -445,6 +446,39 @@ function scheduleSync(){
   if(!sb || !cloudUser) return;
   clearTimeout(syncTimer);
   syncTimer = setTimeout(pushCloud, 1500);
+}
+const DEVICE_KEY = "waypointDeviceId";
+function getDeviceId(){
+  let id = localStorage.getItem(DEVICE_KEY);
+  if(!id){
+    id = Date.now().toString(36)+Math.random().toString(36).slice(2,10);
+    localStorage.setItem(DEVICE_KEY, id);
+  }
+  return id;
+}
+function deviceLabel(){
+  const ua = navigator.userAgent;
+  const browser = ua.includes("Edg")?"Edge":ua.includes("Chrome")?"Chrome":ua.includes("Firefox")?"Firefox":ua.includes("Safari")?"Safari":"Browser";
+  const plat = ua.includes("Windows")?"Windows":ua.includes("Mac")?"macOS":ua.includes("Android")?"Android":(ua.includes("iPhone")||ua.includes("iPad"))?"iOS":ua.includes("Linux")?"Linux":"";
+  return browser+(plat?" ("+plat+")":"");
+}
+function touchDevice(){
+  const id = getDeviceId();
+  const today = new Date().toISOString().slice(0,10);
+  const entry = data.devices[id] || { createdAt: today };
+  entry.label = deviceLabel();
+  entry.lastUsed = today;
+  data.devices[id] = entry;
+}
+function logoutAll(){
+  if(!sb || !cloudUser){ toast("Sign in first"); return; }
+  if(!confirm("Log out of ALL devices? You'll need to sign in again everywhere. Your data stays safe in your account.")) return;
+  (async ()=>{
+    try{ clearTimeout(syncTimer); await pushCloud(); }catch(e){}
+    try{ await sb.auth.signOut({scope:"global"}); }catch(e){}
+    localStorage.removeItem(LS_KEY);
+    location.reload();
+  })();
 }
 function initGA(){
   if(!GA_MEASUREMENT_ID) return;
@@ -609,6 +643,7 @@ function fix(d){
   d.alarms = d.alarms!==false;
   d.onboarded = !!d.onboarded;
   d.account = d.account || null;
+  d.devices = d.devices || {};
   d.deviceId = d.deviceId || (Date.now().toString(36)+Math.random().toString(36).slice(2,10));
   d.createdAt = d.createdAt || new Date().toISOString().slice(0,10);
   d.lastUsed = new Date().toISOString().slice(0,10);
@@ -1662,26 +1697,30 @@ function renderSettings(){
   }
 
   if(curSet==="account"){
-    const ua = navigator.userAgent;
-    const browser = ua.includes("Edg")?"Edge":ua.includes("Chrome")?"Chrome":ua.includes("Firefox")?"Firefox":ua.includes("Safari")?"Safari":"Browser";
-    const plat = ua.includes("Windows")?"Windows":ua.includes("Mac")?"macOS":ua.includes("Linux")?"Linux":ua.includes("Android")?"Android":ua.includes("iPhone")||ua.includes("iPad")?"iOS":"";
     const acct = data.account
       ? '<div class="setrow"><div><b>Signed in as</b><div class="sub">'+esc(data.account.name||"")+(data.account.name?" · ":"")+esc(data.account.email||"")+' (via '+esc(data.account.method)+')</div></div></div>'
-      : '<div class="setrow"><div><b>Not signed in</b><div class="sub">Accounts are stored on this device in this preview</div></div></div>';
+      : '<div class="setrow"><div><b>Not signed in</b><div class="sub">'+(cloudReady()?'Sign in to sync your data across devices':'Accounts are stored on this device in this preview')+'</div></div></div>';
     const syncRow = '<div class="setrow"><div><b>Cloud sync</b><div class="sub">'+
       (cloudUser
-        ? 'On — your data syncs to your account'+(lastSyncAt?' · last synced '+lastSyncAt.toLocaleTimeString():'')
+        ? 'On — your data is saved to your account'+(lastSyncAt?' · last synced '+lastSyncAt.toLocaleTimeString():'')
         : (cloudReady() ? 'Off — sign in to sync your data across devices' : 'Unavailable in local preview'))+
       '</div></div></div>';
+    const myId = getDeviceId();
+    const devs = Object.entries(data.devices||{}).sort((a,b)=>String(b[1].lastUsed||"").localeCompare(String(a[1].lastUsed||"")));
+    const devRows = devs.length
+      ? devs.map(([id,d])=>'<tr><td><b>'+esc(d.label||"Device")+'</b>'+(id===myId?' <span class="badge" style="background:var(--brand-soft);color:var(--brand)">Current</span>':"")+'</td><td>'+esc(d.createdAt||"—")+'</td><td>'+esc(d.lastUsed||"—")+'</td></tr>').join("")
+      : '<tr><td colspan="3"><div class="empty">No devices yet</div></td></tr>';
+    const devNote = cloudUser
+      ? 'Every device signed into your account appears here, and your data stays in sync across all of them.'
+      : (cloudReady() ? 'Sign in on any device and it will appear here, synced with the rest.' : 'Local preview — sign-in unavailable.');
     h = '<h3>Account</h3>'+acct+syncRow+
-      '<div class="setrow"><div><b>Log out</b><div class="sub">Returns to the welcome screen — your data stays on this device</div></div><button class="btn" onclick="obLogout()">Log out</button></div>'+
-      '<div class="setrow"><div><b>Delete account</b><div class="sub">Permanently erases all Waypoint data on this device</div></div><button class="btn danger" onclick="deleteAllData()">Delete account</button></div>'+
-      '<div class="setrow"><b>Device ID</b><code style="font-size:12px;background:var(--card2);border:1px solid var(--line);border-radius:6px;padding:4px 8px">'+esc(data.deviceId)+'</code></div>'+
+      '<div class="setrow"><div><b>Log out</b><div class="sub">'+(cloudUser?'Signs this device out — your data is saved to your account':'Returns to the welcome screen — your data stays on this device')+'</div></div><button class="btn" onclick="obLogout()">Log out</button></div>'+
+      '<div class="setrow"><div><b>Log out of all devices</b><div class="sub">Signs out every device using this account</div></div><button class="btn"'+(cloudUser?' onclick="logoutAll()"':' disabled style="opacity:.45;cursor:not-allowed"')+'>Log out all</button></div>'+
+      '<div class="setrow"><div><b>Delete account</b><div class="sub">'+(cloudUser?'Permanently deletes your account and all your data, everywhere':'Permanently erases all Waypoint data on this device')+'</div></div><button class="btn danger" onclick="deleteAllData()">Delete account</button></div>'+
+      '<div class="setrow"><b>Device ID</b><code style="font-size:12px;background:var(--card2);border:1px solid var(--line);border-radius:6px;padding:4px 8px">'+esc(myId)+'</code></div>'+
       '<h3 style="margin-top:22px">Active sessions</h3>'+
-      '<div class="table-scroll" style="box-shadow:none;border:1px solid var(--line)"><table><thead><tr><th>Device</th><th>Created</th><th>Last used</th></tr></thead><tbody>'+
-      '<tr><td><b>'+browser+(plat?" ("+plat+")":"")+'</b> <span class="badge" style="background:var(--brand-soft);color:var(--brand)">Current</span></td><td>'+esc(data.createdAt)+'</td><td>'+esc(data.lastUsed)+'</td></tr>'+
-      '</tbody></table></div>'+
-      '<p class="sub" style="margin-top:10px">Waypoint runs entirely on this device, so this is your only session. Your detailed discovery profile lives on the Profile & Discovery page.</p>';
+      '<div class="table-scroll" style="box-shadow:none;border:1px solid var(--line)"><table><thead><tr><th>Device</th><th>First used</th><th>Last used</th></tr></thead><tbody>'+devRows+'</tbody></table></div>'+
+      '<p class="sub" style="margin-top:10px">'+devNote+'</p>';
   }
 
   if(curSet==="privacy"){
@@ -1753,11 +1792,38 @@ function importBackup(ev){
   reader.readAsText(file);
 }
 function obLogout(){
+  if(sb && cloudUser){
+    if(!confirm("Log out? Your data is saved to your account — sign back in anytime to pick up where you left off.")) return;
+    (async ()=>{
+      try{ clearTimeout(syncTimer); await pushCloud(); }catch(e){}
+      try{ await sb.auth.signOut(); }catch(e){}
+      localStorage.removeItem(LS_KEY); // device is clean; data lives in the account
+      location.reload();
+    })();
+    return;
+  }
   if(!confirm("Log out? Your data stays on this device.")) return;
-  const fin = ()=>{ data.account=null; data.onboarded=false; save(); location.reload(); };
-  if(sb){ sb.auth.signOut().then(fin, fin); } else fin();
+  clearTimeout(syncTimer);
+  data.account=null; data.onboarded=false;
+  localStorage.setItem(LS_KEY, JSON.stringify(data));
+  location.reload();
 }
 function deleteAllData(){
+  if(sb && cloudUser){
+    if(!confirm("Delete your ENTIRE account? This erases your sign-in and all your data on every device. It cannot be undone.")) return;
+    if(!confirm("Last check — really delete everything, everywhere?")) return;
+    (async ()=>{
+      try{
+        const res = await sb.functions.invoke("delete-account");
+        if(res.error){ toast("Couldn't delete the account — please try again"); return; }
+      }catch(e){ toast("Couldn't reach the server — please try again"); return; }
+      try{ await sb.auth.signOut(); }catch(e){}
+      localStorage.removeItem(LS_KEY);
+      localStorage.removeItem(OLD_KEY);
+      location.reload();
+    })();
+    return;
+  }
   if(!confirm("Delete ALL Waypoint data on this device? This cannot be undone.")) return;
   localStorage.removeItem(LS_KEY);
   localStorage.removeItem(OLD_KEY);
@@ -2129,6 +2195,7 @@ if(window.matchMedia){
 }
 initCloud();
 initGA();
+touchDevice();
 buildListSections();
 buildNav();
 applyTheme();
